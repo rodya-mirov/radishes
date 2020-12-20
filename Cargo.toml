@@ -24,7 +24,10 @@ getrandom = { version = "0.2", features = ["js"] }
 version = "0.3"
 default-features = false
 features = [
-    "wasm-bindgen"
+    "wasm-bindgen",
+    "codegen",
+    "serde",
+    "serialize"
 ]
 
 # web-sys is a transitive dependency of yew; we include it here to add some features around DOM / browser interaction

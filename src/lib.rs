@@ -5,7 +5,7 @@ use legion::{Resources, World};
 use wasm_bindgen::prelude::*;
 
 use yew::prelude::*;
-use yew::services::{ConsoleService, IntervalService, Task};
+use yew::services::{IntervalService, Task};
 
 mod components;
 mod resources;
@@ -80,7 +80,7 @@ fn make_ecs() -> ECS {
     let world = World::default();
     let mut r = Resources::default();
 
-    r.insert(resources::Resources {
+    r.insert(resources::OwnedResources {
         money: 10,
         wood: 0,
         metal: 0,
@@ -91,7 +91,9 @@ fn make_ecs() -> ECS {
 
 fn update_ecs(ecs: &ECS) {
     let (_, r) = &*ecs.lock().unwrap();
-    r.get_mut::<crate::resources::Resources>().unwrap().money += 1;
+    r.get_mut::<crate::resources::OwnedResources>()
+        .unwrap()
+        .money += 1;
 }
 
 #[wasm_bindgen(start)]

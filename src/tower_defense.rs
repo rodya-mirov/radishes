@@ -2,7 +2,6 @@
 //! an entire game, but the "view" is just a canvas, so that works well)
 
 use yew::prelude::*;
-use yew::services::{ConsoleService, IntervalService, Task};
 
 use wasm_bindgen::JsCast;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};

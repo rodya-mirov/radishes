@@ -1,5 +1,5 @@
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-pub struct Resources {
+pub struct OwnedResources {
     pub wood: i64,
     pub metal: i64,
     pub money: i64,

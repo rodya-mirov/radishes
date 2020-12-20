@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::{resources::Resources, ECS};
+use crate::{resources::OwnedResources, ECS};
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 struct ViewedResources {
@@ -11,7 +11,7 @@ struct ViewedResources {
 
 fn from_ecs(ecs: &ECS) -> ViewedResources {
     let (_, r) = &*ecs.lock().unwrap();
-    let resources = r.get::<Resources>().unwrap();
+    let resources = r.get::<OwnedResources>().unwrap();
 
     ViewedResources {
         wood: resources.wood,
@@ -30,9 +30,7 @@ pub(crate) struct ResourcesProps {
 }
 
 #[derive(Clone)]
-pub(crate) enum ResourceViewMessage {
-    Tick(ECS),
-}
+pub(crate) enum ResourceViewMessage {}
 
 impl ResourceView {
     fn update_resources(&mut self, ecs: &ECS) -> bool {
@@ -59,9 +57,7 @@ impl Component for ResourceView {
     }
 
     fn update(&mut self, msg: Self::Message) -> bool {
-        match msg {
-            ResourceViewMessage::Tick(ecs) => self.update_resources(&ecs),
-        }
+        match msg {}
     }
 
     fn change(&mut self, props: Self::Properties) -> bool {
