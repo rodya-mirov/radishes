@@ -1,0 +1,48 @@
+[package]
+name = "radishes"
+version = "0.1.0"
+authors = ["Richard Rast <richard.rast@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# The overall UI framework
+yew = "0.17"
+
+# Used to compile to wasm and link with a JS file
+wasm-bindgen = "0.2.67"
+
+# cruft
+rand = { version = "0.8" }
+
+# getrandom is a transitive dependency of rand; we include it to add the js feature
+getrandom = { version = "0.2", features = ["js"] }
+
+# ECS; note feature setup to make it wasm (and ST) compatible
+[dependencies.legion]
+version = "0.3"
+default-features = false
+features = [
+    "wasm-bindgen"
+]
+
+# web-sys is a transitive dependency of yew; we include it here to add some features around DOM / browser interaction
+# note that they made the interesting API design choice of making every single DOM element type a separate feature,
+# so prepare to spend a lot of time here (???) https://rustwasm.github.io/wasm-bindgen/examples/2d-canvas.html
+[dependencies.web-sys]
+version = "0.3"
+features = [
+    "Touch",
+    "TouchList",
+    "Document",
+    "Element",
+    'HtmlElement',
+    'Node',
+    'Window',
+    'HtmlCanvasElement',
+    'CanvasRenderingContext2d'
+]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
