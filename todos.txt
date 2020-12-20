@@ -1,0 +1,58 @@
+Next feature set:
+	basic TD
+		should have a map with consistent tiles
+		should have monsters that proceed from the beginning to the end
+		should be able to build traps (guns?)
+			traps cost resources
+			once built, traps damage and perhaps kill monsters
+		wave system (after x ticks, next wave spawns)
+		some kind of death condition (if a mob hits your core, you lose one health; if you lose all health, you "die")
+
+	set 1a:
+		a tilemap exists in the ECS and can be rendered
+		tiles are just "open" and "wall"
+		prepopulated in init, static
+		use solid colors with borders for now (rendered in code with fillRect)
+
+	set 1b:
+		can click on tiles and some kind of "useful information" appears in an infopane
+
+	set 1c:
+		add tiles "spawn" and "goal"
+		prepopulated in init, static
+
+	set 2a:
+		can "modify tiles" -- open to wall and vv
+
+	set 2b:
+		a dijkstra map is maintained spawn -> core;
+			player is not allowed to build a blocker
+			useful message appears in the infopane if they try
+
+	set 2c:
+		modifying tiles costs resources, if the resources are not available then modifying cannot be done
+
+	set 3a:
+		monsters exist (prepopulated in init, static) and are rendered
+		just simple circles for now
+
+	set 3b:
+		exactly one spawn + core tile
+		monsters spawn at spawn point
+		monsters proceed to core
+		health loss can occur
+
+	set 3c:
+		monsters come in waves -- after [n] ticks, the next wave spawns
+
+	set 3d:
+		if health <= 0, some kind of death condition (design TBA; better than "crash the game")
+
+	set 4a:
+		spike traps can be built in exchange for resources
+		traps exist in space; appear in infopane
+
+	set 4b:
+		every tick that monsters are on a spike trap, they take damage
+		if a monster's health goes to zero, they die
+		if a monster dies, player gets some kind of resource
