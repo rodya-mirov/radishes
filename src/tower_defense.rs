@@ -3,61 +3,114 @@
 
 use yew::prelude::*;
 
-use wasm_bindgen::JsCast;
+use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
-use crate::ECS;
+use crate::{resources::*, ECS};
 
 pub(crate) struct TowerDefenseComponent {
     _link: ComponentLink<Self>,
-    td_state: TDState,
     model: ECS,
-}
-
-struct TDState {
-    r: u8,
-    g: u8,
-    b: u8,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub(crate) enum TDMessage {}
 
+fn with_canvas<F: FnOnce(&mut HtmlCanvasElement, &mut CanvasRenderingContext2d)>(f: F) {
+    let window = web_sys::window().expect("Window should exist");
+
+    let document: web_sys::Document = window.document().expect("Document should exist");
+
+    let canvas = document.get_element_by_id("td-canvas").unwrap();
+
+    let mut canvas: HtmlCanvasElement = canvas
+        .dyn_into::<HtmlCanvasElement>()
+        .map_err(|_| ())
+        .unwrap();
+
+    let mut context: CanvasRenderingContext2d = canvas
+        .get_context("2d")
+        .unwrap()
+        .unwrap()
+        .dyn_into::<CanvasRenderingContext2d>()
+        .unwrap();
+
+    context.save();
+
+    f(&mut canvas, &mut context);
+
+    context.restore();
+}
+
 impl TowerDefenseComponent {
     fn draw_canvas(&self) {
-        let document: web_sys::Document = web_sys::window()
-            .expect("Window should exist")
-            .document()
-            .expect("Document should exist");
+        with_canvas(|canvas, context| {
 
-        let canvas = document.get_element_by_id("td-canvas").unwrap();
+            context
+                .set_global_composite_operation("source-over")
+                .expect("Setting GCO should work");
 
-        let canvas: HtmlCanvasElement = canvas
-            .dyn_into::<HtmlCanvasElement>()
-            .map_err(|_| ())
-            .unwrap();
+            context.set_fill_style(&JsValue::from("white"));
 
-        let context: CanvasRenderingContext2d = canvas
-            .get_context("2d")
-            .unwrap()
-            .unwrap()
-            .dyn_into::<CanvasRenderingContext2d>()
-            .unwrap();
+            context.clear_rect(
+                0.,
+                0.,
+                canvas.width() as f64 + 2.,
+                canvas.height() as f64 + 2.,
+            );
 
-        context.clear_rect(0., 0., canvas.width() as f64, canvas.height() as f64);
+            let (_world, resources) = &*self.model.lock().unwrap();
+            let map = resources.get::<Map>().unwrap();
 
-        // lol
-        context.set_fill_style(&wasm_bindgen::JsValue::from(&format!(
-            "rgb({}, {}, {})",
-            self.td_state.r, self.td_state.g, self.td_state.b
-        )));
+            const X_MIN: i32 = -10; // incl
+            const X_MAX: i32 = 11; // excl
+            let tile_width: i32 = (canvas.width() as i32) / (X_MAX - X_MIN);
 
-        context.fill_rect(
-            10.,
-            10.,
-            canvas.width() as f64 - 10.,
-            canvas.height() as f64 - 10.,
-        );
+            const Y_MIN: i32 = -10;
+            const Y_MAX: i32 = 11;
+            let tile_height: i32 = (canvas.height() as i32) / (Y_MAX - Y_MIN);
+
+            let black = JsValue::from("#000000");
+
+            for x in X_MIN..X_MAX {
+                for y in Y_MIN..Y_MAX {
+                    let tile: Tile = map.get_tile(x, y);
+
+                    let x_left = (x - X_MIN) * tile_width;
+                    let y_top = (y - Y_MIN) * tile_height;
+
+                    let color = match tile {
+                        Tile::Open => JsValue::from("#70e0e0"),
+                        Tile::Wall => JsValue::from("#008050"),
+                    };
+
+                    context.set_fill_style(&color);
+
+                    context.fill_rect(
+                        x_left as f64,
+                        y_top as f64,
+                        tile_width as f64,
+                        tile_height as f64,
+                    );
+                }
+            }
+
+            for x in X_MIN..X_MAX {
+                for y in Y_MIN..Y_MAX {
+                    let x_left = (x - X_MIN) * tile_width;
+                    let y_top = (y - Y_MIN) * tile_height;
+
+                    context.set_stroke_style(&black);
+
+                    context.stroke_rect(
+                        x_left as f64 + 0.5,
+                        y_top as f64 + 0.5,
+                        tile_width as f64,
+                        tile_height as f64 ,
+                    );
+                }
+            }
+        });
     }
 }
 
@@ -74,7 +127,6 @@ impl Component for TowerDefenseComponent {
         Self {
             _link: link,
             model: props.ecs,
-            td_state: TDState { r: 255, g: 0, b: 0 },
         }
     }
 

@@ -77,14 +77,31 @@ impl Component for Model {
 }
 
 fn make_ecs() -> ECS {
+    use resources::*;
+
     let world = World::default();
     let mut r = Resources::default();
 
-    r.insert(resources::OwnedResources {
+    r.insert(OwnedResources {
         money: 10,
         wood: 0,
         metal: 0,
     });
+
+    let mut map = Map::new(Tile::Wall);
+    map.set_tile(0, 0, Tile::Open);
+    map.set_tile(0, 1, Tile::Open);
+    map.set_tile(0, 2, Tile::Open);
+    map.set_tile(1, 2, Tile::Open);
+    map.set_tile(2, 2, Tile::Open);
+    map.set_tile(3, 2, Tile::Open);
+    map.set_tile(4, 2, Tile::Open);
+    map.set_tile(4, 1, Tile::Open);
+    map.set_tile(4, 0, Tile::Open);
+    map.set_tile(4, -1, Tile::Open);
+    map.set_tile(4, -2, Tile::Open);
+
+    r.insert(map);
 
     Arc::new(Mutex::new((world, r)))
 }
