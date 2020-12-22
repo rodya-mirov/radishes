@@ -21,6 +21,10 @@ Next feature set:
 		add tiles "spawn" and "goal"
 		prepopulated in init, static
 
+    set 1d:
+        keyboard scrolling around the td (arrows to move)
+        probably a camera in ECS resources
+
 	set 2a:
 		can "modify tiles" -- open to wall and vv
 

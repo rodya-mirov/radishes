@@ -1,6 +1,18 @@
 use std::collections::HashMap;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+pub enum TdMouseOver {
+    None,
+    MousedOver { x: i32, y: i32 },
+}
+
+impl Default for TdMouseOver {
+    fn default() -> Self {
+        TdMouseOver::None
+    }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct OwnedResources {
     pub wood: i64,
     pub metal: i64,

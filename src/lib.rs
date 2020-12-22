@@ -11,6 +11,7 @@ mod components;
 mod resources;
 mod systems;
 
+mod detail_view;
 mod resource_view;
 mod tower_defense;
 
@@ -70,7 +71,10 @@ impl Component for Model {
                 <div id="tower-defense-div">
                     <tower_defense::TowerDefenseComponent ecs={self.ecs.clone()} />
                 </div>
-                <resource_view::ResourceView ecs={self.ecs.clone()} />
+                <div class="info-pane-main-div">
+                    <resource_view::ResourceView ecs={self.ecs.clone()} />
+                    <detail_view::DetailView ecs={self.ecs.clone()} />
+                </div>
             </div>
         }
     }

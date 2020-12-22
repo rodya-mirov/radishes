@@ -43,6 +43,7 @@ features = [
     'HtmlElement',
     'Node',
     'Window',
+    'DomRect',
     'HtmlCanvasElement',
     'CanvasRenderingContext2d'
 ]

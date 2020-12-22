@@ -66,7 +66,7 @@ impl Component for ResourceView {
 
     fn view(&self) -> Html {
         html! {
-            <div id="resource-view-div">
+            <div class="info-pane">
                 <p>{ "Money: " }{ self.resources.money }</p>
                 <p>{ "Wood:  "}{ self.resources.wood }</p>
                 <p>{ "Metal: " }{ self.resources.metal }</p>

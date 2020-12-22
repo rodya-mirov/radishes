@@ -1,0 +1,70 @@
+#game-div {
+    margin: auto;
+    height: 100%;
+    width: 60%;
+    display: flex;
+}
+
+/* All the stuff goes in here */
+.info-pane-main-div {
+    height: 100%;
+    width: 20%;
+}
+
+/* Child objects of info-pane-main-div */
+.info-pane {
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 5px;
+
+    padding: 10px;
+
+    font-size: 1em;
+
+    width: 100%;
+}
+
+#td-canvas {
+    width: 500px;
+    height: 500px;
+}
+
+.tower-defense-div {
+    display: inline-block;
+
+    height: 100%;
+    width: 80%;
+
+    border-style: solid;
+    border-width: 2px;
+
+    /*
+    This is needed so no visual space exists between "rows"
+    If you need rendered text at some point in a child cell you will need to undo this in the child cell.
+     */
+    font-size: 0;
+}
+
+.td-tile-row {
+    display: inline-block;
+
+    padding: 0;
+}
+
+.tile {
+    display: inline-block;
+
+    width: 20px;
+    height: 20px;
+
+    border-style: solid;
+    border-width: 1px;
+}
+
+.tile-open {
+    background-color: burlywood;
+}
+
+.tile-wall {
+    background-color: darkslategrey;
+}
