@@ -23,6 +23,8 @@ pub struct OwnedResources {
 pub enum Tile {
     Open,
     Wall,
+    Spawn,
+    Core,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug)]

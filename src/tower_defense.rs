@@ -143,6 +143,8 @@ impl TowerDefenseComponent {
                     let color = match tile {
                         Tile::Open => JsValue::from("#70e0e0"),
                         Tile::Wall => JsValue::from("#008050"),
+                        Tile::Spawn => JsValue::from("#ff1587"),
+                        Tile::Core => JsValue::from("#1584ff"),
                     };
 
                     canvas_state.context.set_fill_style(&color);

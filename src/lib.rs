@@ -93,7 +93,8 @@ fn make_ecs() -> ECS {
     });
 
     let mut map = Map::new(Tile::Wall);
-    map.set_tile(0, 0, Tile::Open);
+
+    map.set_tile(0, 0, Tile::Spawn);
     map.set_tile(0, 1, Tile::Open);
     map.set_tile(0, 2, Tile::Open);
     map.set_tile(1, 2, Tile::Open);
@@ -103,7 +104,7 @@ fn make_ecs() -> ECS {
     map.set_tile(4, 1, Tile::Open);
     map.set_tile(4, 0, Tile::Open);
     map.set_tile(4, -1, Tile::Open);
-    map.set_tile(4, -2, Tile::Open);
+    map.set_tile(4, -2, Tile::Core);
 
     r.insert(map);
 
