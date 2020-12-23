@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-pub enum TdMouseOver {
+pub enum TdTileSelect {
     None,
-    MousedOver { x: i32, y: i32 },
+    Selected { x: i32, y: i32 },
 }
 
-impl Default for TdMouseOver {
+impl Default for TdTileSelect {
     fn default() -> Self {
-        TdMouseOver::None
+        TdTileSelect::None
     }
 }
 

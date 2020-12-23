@@ -1,4 +1,4 @@
-use legion::{Resources, World};
+use legion::{Resources, Schedule, World};
 
 use wasm_bindgen::prelude::*;
 
@@ -43,6 +43,7 @@ struct Model {
     _link: ComponentLink<Self>,
     _tick_handle: Box<dyn Task>,
     ecs: ECS,
+    schedule: Schedule,
 }
 
 enum ModelMsg {
@@ -64,8 +65,11 @@ impl Component for Model {
         let tick_handle =
             IntervalService::spawn(std::time::Duration::from_millis(50), tick_cb.clone());
 
+        let schedule = systems::make_schedule();
+
         Self {
             ecs,
+            schedule,
             _link: link,
             _tick_handle: Box::new(tick_handle),
         }
@@ -74,7 +78,11 @@ impl Component for Model {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             ModelMsg::Tick => {
-                update_ecs(&self.ecs);
+                let schedule = &mut self.schedule;
+                self.ecs.with(|world, resources| {
+                    schedule.execute(world, resources);
+                });
+
                 true
             }
         }
@@ -133,14 +141,6 @@ fn make_ecs() -> ECS {
     r.insert(TdCamera::default());
 
     ECS::new(world, r)
-}
-
-fn update_ecs(ecs: &ECS) {
-    ecs.with(|_, r| {
-        r.get_mut::<crate::resources::OwnedResources>()
-            .unwrap()
-            .money += 1;
-    });
 }
 
 #[wasm_bindgen(start)]

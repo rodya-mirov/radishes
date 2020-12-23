@@ -16,8 +16,8 @@ pub(crate) struct TowerDefenseComponent {
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub(crate) enum TDMessage {
-    MousedOver { x: i32, y: i32 },
-    MouseExit,
+    ClickedPixel { x: i32, y: i32 },
+    Cancel,
     ArrowKeyDown(ArrowKey),
     // callbacks can't conditionally return things, so we need an "actually nevermind"
     Nothing,
@@ -85,15 +85,13 @@ const TILE_HEIGHT_PIXELS: i32 = 30;
 /// :param border_offset -- Used to say when the next tile starts. e.g. if given 1,
 ///     and the tile width is 30, this means that a tile "starts" on 1, 31, etc.
 fn coords_to_tile(x: i32, y: i32, border_offset: i32) -> Option<(i32, i32)> {
-    let w = TILE_WIDTH_PIXELS;
-    let tile_x = safe_div(x - border_offset, w, 2)?;
+    let tile_x = safe_div(x - border_offset, TILE_WIDTH_PIXELS, 2)?;
 
-    let h = TILE_HEIGHT_PIXELS;
-    let tile_y = safe_div(y - border_offset, h, 2)?;
+    let tile_y = safe_div(y - border_offset, TILE_HEIGHT_PIXELS, 2)?;
 
     ConsoleService::log(&format!(
         "Given relative pixels {}, {}, in squares {}, {} (BO {}); found coordinates {}, {}",
-        x, y, w, h, border_offset, tile_x, tile_y
+        x, y, TILE_WIDTH_PIXELS, TILE_HEIGHT_PIXELS, border_offset, tile_x, tile_y
     ));
 
     Some((tile_x, tile_y))
@@ -150,6 +148,7 @@ impl TowerDefenseComponent {
             let canvas_height: i32 = canvas_state.bounding_rect.height() as i32;
 
             self.ecs.with(|_, resources| {
+                let hover_state: TdTileSelect = *(resources.get_or_default());
                 let map = resources.get::<Map>().unwrap();
                 let camera = resources.get::<TdCamera>().unwrap();
 
@@ -166,6 +165,7 @@ impl TowerDefenseComponent {
                     div_round_up(canvas_height - y_pixel_offset, TILE_HEIGHT_PIXELS);
 
                 let black = JsValue::from("#000000");
+                let highlighted = JsValue::from("#DCFB3E");
 
                 for x_ind in 0..num_tiles_wide + 1 {
                     let tile_x = x_min_tile + x_ind;
@@ -196,17 +196,30 @@ impl TowerDefenseComponent {
                 }
 
                 for x_ind in 0..num_tiles_wide + 1 {
+                    let tile_x = x_min_tile + x_ind;
+
                     for y_ind in 0..num_tiles_tall + 1 {
+                        let tile_y = y_min_tile + y_ind;
+
                         let x_left_pixel = x_pixel_offset + (x_ind * TILE_WIDTH_PIXELS);
                         let y_top_pixel = y_pixel_offset + (y_ind * TILE_HEIGHT_PIXELS);
 
-                        canvas_state.context.set_stroke_style(&black);
+                        if hover_state
+                            == (TdTileSelect::Selected {
+                                x: tile_x,
+                                y: tile_y,
+                            })
+                        {
+                            canvas_state.context.set_stroke_style(&highlighted);
+                        } else {
+                            canvas_state.context.set_stroke_style(&black);
+                        }
 
                         canvas_state.context.stroke_rect(
                             x_left_pixel as f64 + 0.5,
                             y_top_pixel as f64 + 0.5,
-                            TILE_WIDTH_PIXELS as f64,
-                            TILE_HEIGHT_PIXELS as f64,
+                            TILE_WIDTH_PIXELS as f64 - 1.,
+                            TILE_HEIGHT_PIXELS as f64 - 1.,
                         );
                     }
                 }
@@ -236,35 +249,26 @@ impl Component for TowerDefenseComponent {
 
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
-            TDMessage::Nothing => false,
-            TDMessage::MousedOver { x, y } => {
+            TDMessage::Nothing => {}
+            TDMessage::ClickedPixel { x, y } => {
                 let (left, top) = self.ecs.with(|_, r| {
                     let camera = r.get_or_default::<TdCamera>();
                     (camera.left, camera.top)
                 });
 
-                let mouse_over_state = {
-                    if let Some((tile_x, tile_y)) = coords_to_tile(x + left, y + top, 1) {
-                        TdMouseOver::MousedOver {
+                if let Some((tile_x, tile_y)) = coords_to_tile(x + left, y + top, 2) {
+                    self.ecs.with(|_, r| {
+                        *r.get_mut_or_default::<TdTileSelect>() = TdTileSelect::Selected {
                             x: tile_x,
                             y: tile_y,
-                        }
-                    } else {
-                        TdMouseOver::None
-                    }
-                };
-
-                self.ecs.with(|_, r| {
-                    *r.get_mut_or_default::<TdMouseOver>() = mouse_over_state;
-                });
-
-                false
+                        };
+                    });
+                }
             }
-            TDMessage::MouseExit => {
+            TDMessage::Cancel => {
                 self.ecs.with(|_, r| {
-                    *r.get_mut_or_default::<TdMouseOver>() = TdMouseOver::None;
+                    *r.get_mut_or_default::<TdTileSelect>() = TdTileSelect::None;
                 });
-                false
             }
             TDMessage::ArrowKeyDown(arrow_key) => {
                 let (dx, dy) = match arrow_key {
@@ -279,10 +283,10 @@ impl Component for TowerDefenseComponent {
                     camera.top += dy * KEYBOARD_MOVE_SPEED;
                     camera.left += dx * KEYBOARD_MOVE_SPEED;
                 });
-
-                false
             }
         }
+
+        false
     }
 
     fn change(&mut self, _: Self::Properties) -> bool {
@@ -293,7 +297,15 @@ impl Component for TowerDefenseComponent {
     }
 
     fn view(&self) -> Html {
-        let hover_cb = self.link.callback(|mouse_event: MouseEvent| {
+        let hover_cb = self.link.callback(|_: MouseEvent| {
+            with_canvas(|cs| {
+                cs.canvas.focus().unwrap();
+            });
+
+            TDMessage::Nothing
+        });
+
+        let click_cb = self.link.callback(|mouse_event: MouseEvent| {
             let (x, y) = with_canvas(|cs| {
                 cs.canvas.focus().unwrap();
 
@@ -303,10 +315,8 @@ impl Component for TowerDefenseComponent {
                 (x, y)
             });
 
-            TDMessage::MousedOver { x, y }
+            TDMessage::ClickedPixel { x, y }
         });
-
-        let leave_cb = self.link.callback(|_: MouseEvent| TDMessage::MouseExit);
 
         let kd_cb = self
             .link
@@ -315,11 +325,12 @@ impl Component for TowerDefenseComponent {
                 "ArrowUp" | "KeyW" => TDMessage::ArrowKeyDown(ArrowKey::Up),
                 "ArrowLeft" | "KeyA" => TDMessage::ArrowKeyDown(ArrowKey::Left),
                 "ArrowRight" | "KeyD" => TDMessage::ArrowKeyDown(ArrowKey::Right),
+                "Escape" => TDMessage::Cancel,
                 _ => TDMessage::Nothing,
             });
 
         html! {
-            <canvas id="td-canvas" tabIndex=1 onmousemove=hover_cb onmouseleave=leave_cb onkeydown=kd_cb />
+            <canvas id="td-canvas" tabIndex=1 onclick=click_cb onmousemove=hover_cb onkeydown=kd_cb />
         }
     }
 

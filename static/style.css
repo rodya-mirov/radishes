@@ -28,6 +28,16 @@ canvas:focus {
     width: 100%;
 }
 
+.change-tile-button {
+    border-style: solid;
+    border-width: 1px;
+    border-color: darkblue;
+
+    padding: 5%;
+
+    background-color: cornflowerblue;
+}
+
 #td-canvas {
     width: 500px;
     height: 500px;

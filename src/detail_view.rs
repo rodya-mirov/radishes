@@ -1,8 +1,12 @@
 use yew::prelude::*;
 
-use crate::{resources::*, ECS};
+use web_sys::MouseEvent;
+
+use crate::{components::*, resources::*, ECS};
 
 pub(crate) struct DetailView {
+    link: ComponentLink<Self>,
+    ecs: ECS,
     detail_state: DetailState,
 }
 
@@ -12,7 +16,9 @@ pub(crate) struct DetailViewProps {
 }
 
 #[derive(Clone)]
-pub(crate) enum DetailViewMsg {}
+pub(crate) enum DetailViewMsg {
+    ChangeTileButtonClicked { x: i32, y: i32, desired: Tile },
+}
 
 enum DetailState {
     Nothing,
@@ -21,11 +27,11 @@ enum DetailState {
 
 fn from_ecs(ecs: &ECS) -> DetailState {
     ecs.with(|_, r| {
-        let mouseover = *(r.get_or_default::<TdMouseOver>());
+        let mouseover = *(r.get_or_default::<TdTileSelect>());
 
         match mouseover {
-            TdMouseOver::None => DetailState::Nothing,
-            TdMouseOver::MousedOver { x, y } => {
+            TdTileSelect::None => DetailState::Nothing,
+            TdTileSelect::Selected { x, y } => {
                 let tile = r.get::<Map>().unwrap().get_tile(x, y);
                 DetailState::Tile { x, y, tile }
             }
@@ -38,21 +44,75 @@ impl DetailView {
         self.detail_state = from_ecs(ecs);
         true
     }
+
+    fn make_change_button(&self, x: i32, y: i32, tile: Tile) -> Html {
+        let click_cb =
+            self.link.callback(
+                move |_: MouseEvent| DetailViewMsg::ChangeTileButtonClicked {
+                    x,
+                    y,
+                    desired: tile,
+                },
+            );
+
+        let button_text = format!("Change to {:?}", tile);
+
+        html! {
+            <div onclick=click_cb class="change-tile-button">
+                <p> { &button_text } </p>
+            </div>
+        }
+    }
+
+    fn tile_details(&self, x: i32, y: i32, tile: Tile) -> Html {
+        let tile_str = format!("Selected tile at ({}, {}): {:?}", x, y, tile);
+
+        // TODO: add a button to turn the tile into a different kind of tile
+        // this should be achieved by launching a message to the ECS and having a system take care of it
+
+        let mut changes: Vec<Html> = Vec::new();
+        match tile {
+            Tile::Wall => {
+                changes.push(self.make_change_button(x, y, Tile::Open));
+            }
+            Tile::Open => {
+                changes.push(self.make_change_button(x, y, Tile::Wall));
+            }
+            // no mods available for special tiles
+            Tile::Core | Tile::Spawn => {}
+        }
+
+        html! {
+            <div class="info-pane">
+                <p>{ tile_str }</p>
+                { changes }
+            </div>
+        }
+    }
 }
 
 impl Component for DetailView {
     type Message = DetailViewMsg;
     type Properties = DetailViewProps;
 
-    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        // link is not used; no callbacks are needed
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         DetailView {
+            link,
             detail_state: from_ecs(&props.ecs),
+            ecs: props.ecs,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> bool {
-        match msg {}
+        match msg {
+            DetailViewMsg::ChangeTileButtonClicked { x, y, desired } => {
+                self.ecs.with(|world, _| {
+                    world.push((TryChangeTileType { x, y, desired },));
+                });
+            }
+        }
+
+        false
     }
 
     fn change(&mut self, props: Self::Properties) -> bool {
@@ -62,7 +122,7 @@ impl Component for DetailView {
     fn view(&self) -> Html {
         match &self.detail_state {
             DetailState::Nothing => empty_pane(),
-            DetailState::Tile { x, y, tile } => tile_details(*x, *y, *tile),
+            DetailState::Tile { x, y, tile } => self.tile_details(*x, *y, *tile),
         }
     }
 }
@@ -70,14 +130,5 @@ impl Component for DetailView {
 fn empty_pane() -> Html {
     html! {
         <></>
-    }
-}
-
-fn tile_details(x: i32, y: i32, tile: Tile) -> Html {
-    let tile_str = format!("Selected tile at ({}, {}): {:?}", x, y, tile);
-    html! {
-        <div class="info-pane">
-            <p>{ tile_str }</p>
-        </div>
     }
 }
