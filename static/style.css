@@ -11,6 +11,10 @@
     width: 20%;
 }
 
+canvas:focus {
+    outline: none;
+}
+
 /* Child objects of info-pane-main-div */
 .info-pane {
     border-width: 2px;
@@ -30,13 +34,15 @@
 }
 
 .tower-defense-div {
-    display: inline-block;
 
     height: 100%;
     width: 80%;
 
+    margin: 5px;
+
     border-style: solid;
-    border-width: 2px;
+    border-color: burlywood;
+    border-width: 5px;
 
     /*
     This is needed so no visual space exists between "rows"

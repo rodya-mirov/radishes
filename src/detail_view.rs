@@ -20,20 +20,17 @@ enum DetailState {
 }
 
 fn from_ecs(ecs: &ECS) -> DetailState {
-    let mut ecs = ecs.lock().unwrap();
-    let (_, r) = &mut *ecs;
+    ecs.with(|_, r| {
+        let mouseover = *(r.get_or_default::<TdMouseOver>());
 
-    let mouseover = *(r.get_or_default::<TdMouseOver>());
-
-    let out = match mouseover {
-        TdMouseOver::None => DetailState::Nothing,
-        TdMouseOver::MousedOver { x, y } => {
-            let tile = r.get::<Map>().unwrap().get_tile(x, y);
-            DetailState::Tile { x, y, tile }
+        match mouseover {
+            TdMouseOver::None => DetailState::Nothing,
+            TdMouseOver::MousedOver { x, y } => {
+                let tile = r.get::<Map>().unwrap().get_tile(x, y);
+                DetailState::Tile { x, y, tile }
+            }
         }
-    };
-
-    out
+    })
 }
 
 impl DetailView {

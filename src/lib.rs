@@ -1,5 +1,3 @@
-use std::sync::{Arc, Mutex};
-
 use legion::{Resources, World};
 
 use wasm_bindgen::prelude::*;
@@ -15,7 +13,31 @@ mod detail_view;
 mod resource_view;
 mod tower_defense;
 
-type ECS = Arc<Mutex<(World, Resources)>>;
+mod ecs_wrapper {
+
+    use std::sync::{Arc, Mutex};
+
+    use legion::{Resources, World};
+
+    #[derive(Clone)]
+    pub struct ECS(Arc<Mutex<(World, Resources)>>);
+
+    impl ECS {
+        pub fn new(world: World, resources: Resources) -> Self {
+            ECS(Arc::new(Mutex::new((world, resources))))
+        }
+
+        pub fn with<A, F: FnOnce(&mut World, &mut Resources) -> A>(&self, f: F) -> A {
+            let mut guard = self.0.lock().unwrap();
+
+            let (ref mut w, ref mut r) = &mut *guard;
+
+            f(w, r)
+        }
+    }
+}
+
+pub use ecs_wrapper::ECS;
 
 struct Model {
     _link: ComponentLink<Self>,
@@ -108,14 +130,17 @@ fn make_ecs() -> ECS {
 
     r.insert(map);
 
-    Arc::new(Mutex::new((world, r)))
+    r.insert(TdCamera::default());
+
+    ECS::new(world, r)
 }
 
 fn update_ecs(ecs: &ECS) {
-    let (_, r) = &*ecs.lock().unwrap();
-    r.get_mut::<crate::resources::OwnedResources>()
-        .unwrap()
-        .money += 1;
+    ecs.with(|_, r| {
+        r.get_mut::<crate::resources::OwnedResources>()
+            .unwrap()
+            .money += 1;
+    });
 }
 
 #[wasm_bindgen(start)]

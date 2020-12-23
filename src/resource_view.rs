@@ -10,14 +10,15 @@ struct ViewedResources {
 }
 
 fn from_ecs(ecs: &ECS) -> ViewedResources {
-    let (_, r) = &*ecs.lock().unwrap();
-    let resources = r.get::<OwnedResources>().unwrap();
+    ecs.with(|_, r| {
+        let resources = r.get::<OwnedResources>().unwrap();
 
-    ViewedResources {
-        wood: resources.wood,
-        metal: resources.metal,
-        money: resources.money,
-    }
+        ViewedResources {
+            wood: resources.wood,
+            metal: resources.metal,
+            money: resources.money,
+        }
+    })
 }
 
 pub(crate) struct ResourceView {

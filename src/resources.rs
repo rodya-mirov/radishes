@@ -49,3 +49,11 @@ impl Map {
         self.map.insert((x, y), tile);
     }
 }
+
+#[derive(Copy, Clone, Eq, PartialEq, Default)]
+pub struct TdCamera {
+    /// Top pixel on camera
+    pub top: i32,
+    /// Leftmost pixel on camera
+    pub left: i32,
+}
