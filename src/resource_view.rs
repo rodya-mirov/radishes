@@ -1,28 +1,9 @@
 use yew::prelude::*;
 
-use crate::{resources::OwnedResources, ECS};
-
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-struct ViewedResources {
-    wood: i64,
-    metal: i64,
-    money: i64,
-}
-
-fn from_ecs(ecs: &ECS) -> ViewedResources {
-    ecs.with(|_, r| {
-        let resources = r.get::<OwnedResources>().unwrap();
-
-        ViewedResources {
-            wood: resources.wood,
-            metal: resources.metal,
-            money: resources.money,
-        }
-    })
-}
+use crate::{resources::*, ECS};
 
 pub(crate) struct ResourceView {
-    resources: ViewedResources,
+    model: ECS,
 }
 
 #[derive(Clone, Properties)]
@@ -33,16 +14,10 @@ pub(crate) struct ResourcesProps {
 #[derive(Clone)]
 pub(crate) enum ResourceViewMessage {}
 
-impl ResourceView {
-    fn update_resources(&mut self, ecs: &ECS) -> bool {
-        let rv = from_ecs(ecs);
-
-        if rv != self.resources {
-            self.resources = rv;
-            true
-        } else {
-            false
-        }
+fn resource_view(r: OwnedResource, amt: i64) -> Html {
+    let s = format!("{}: {}", r, amt);
+    html! {
+        <p>{ s }</p>
     }
 }
 
@@ -52,9 +27,7 @@ impl Component for ResourceView {
 
     fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
         // link is not used; no callbacks are needed
-        ResourceView {
-            resources: from_ecs(&props.ecs),
-        }
+        ResourceView { model: props.ecs }
     }
 
     fn update(&mut self, msg: Self::Message) -> bool {
@@ -62,15 +35,28 @@ impl Component for ResourceView {
     }
 
     fn change(&mut self, props: Self::Properties) -> bool {
-        self.update_resources(&props.ecs)
+        self.model = props.ecs;
+        true
     }
 
     fn view(&self) -> Html {
+        let list: Vec<Html> = self.model.with(|_, r| {
+            let owned = r.get::<OwnedResources>().unwrap();
+
+            ALL_RESOURCES
+                .iter()
+                .copied()
+                .map(|o| {
+                    let amt = owned.0.get(&o).copied().unwrap_or(0);
+                    (o, amt)
+                })
+                .map(|(o, amt)| resource_view(o, amt))
+                .collect()
+        });
+
         html! {
             <div class="info-pane">
-                <p>{ "Money: " }{ self.resources.money }</p>
-                <p>{ "Wood:  "}{ self.resources.wood }</p>
-                <p>{ "Metal: " }{ self.resources.metal }</p>
+                { list }
             </div>
         }
     }

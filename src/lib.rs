@@ -116,13 +116,9 @@ fn make_ecs() -> ECS {
     let world = World::default();
     let mut r = Resources::default();
 
-    r.insert(OwnedResources {
-        money: 10,
-        wood: 0,
-        metal: 0,
-    });
+    r.insert(OwnedResources::new().with(OwnedResource::Money, 10));
 
-    let mut map = Map::new(Tile::Wall);
+    let mut map = Map::new();
 
     map.set_tile(0, 0, Tile::Spawn);
     map.set_tile(0, 1, Tile::Open);
@@ -139,6 +135,30 @@ fn make_ecs() -> ECS {
     r.insert(map);
 
     r.insert(TdCamera::default());
+
+    // TODO: probably put these in "raws" somewhere
+    let mut transforms = TileTransforms::new();
+    transforms.add(TileTransformDesc {
+        source: Tile::Open,
+        target: Tile::Wall,
+        cost: OwnedResources::new()
+            .with(OwnedResource::Money, 5)
+            .with(OwnedResource::Wood, 5),
+    });
+    transforms.add(TileTransformDesc {
+        source: Tile::Wall,
+        target: Tile::Open,
+        cost: OwnedResources::new().with(OwnedResource::Money, 3),
+    });
+    transforms.add(TileTransformDesc {
+        source: Tile::Open,
+        target: Tile::Spawn,
+        cost: OwnedResources::new()
+            .with(OwnedResource::Metal, 15)
+            .with(OwnedResource::Wood, 25),
+    });
+
+    r.insert(transforms);
 
     ECS::new(world, r)
 }

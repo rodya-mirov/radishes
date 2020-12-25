@@ -553,6 +553,7 @@ dependencies = [
  "getrandom 0.2.0",
  "legion",
  "rand 0.8.0",
+ "serde",
  "wasm-bindgen",
  "web-sys",
  "yew",

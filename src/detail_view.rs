@@ -17,7 +17,12 @@ pub(crate) struct DetailViewProps {
 
 #[derive(Clone)]
 pub(crate) enum DetailViewMsg {
-    ChangeTileButtonClicked { x: i32, y: i32, desired: Tile },
+    ChangeTileButtonClicked {
+        x: i32,
+        y: i32,
+        desired: Tile,
+        costs: OwnedResources,
+    },
 }
 
 enum DetailState {
@@ -45,13 +50,16 @@ impl DetailView {
         true
     }
 
-    fn make_change_button(&self, x: i32, y: i32, tile: Tile) -> Html {
+    fn make_change_button(&self, x: i32, y: i32, tile: Tile, costs: OwnedResources) -> Html {
+        let cost_display = self.make_cost_display(&costs);
+
         let click_cb =
             self.link.callback(
                 move |_: MouseEvent| DetailViewMsg::ChangeTileButtonClicked {
                     x,
                     y,
                     desired: tile,
+                    costs: costs.clone(),
                 },
             );
 
@@ -60,8 +68,19 @@ impl DetailView {
         html! {
             <div onclick=click_cb class="change-tile-button">
                 <p> { &button_text } </p>
+                { cost_display }
             </div>
         }
+    }
+
+    fn make_cost_display(&self, cost: &OwnedResources) -> Html {
+        cost.0
+            .iter()
+            .filter(|(_, amt)| **amt != 0)
+            .map(|(o, amt)| {
+                html! { <p> { &format!("{}: {}", o, amt) } </p> }
+            })
+            .collect()
     }
 
     fn tile_details(&self, x: i32, y: i32, tile: Tile) -> Html {
@@ -71,16 +90,16 @@ impl DetailView {
         // this should be achieved by launching a message to the ECS and having a system take care of it
 
         let mut changes: Vec<Html> = Vec::new();
-        match tile {
-            Tile::Wall => {
-                changes.push(self.make_change_button(x, y, Tile::Open));
+        self.ecs.with(|_, r| {
+            for (target, cost) in r
+                .get::<TileTransforms>()
+                .unwrap()
+                .list_all_for(tile)
+                .into_iter()
+            {
+                changes.push(self.make_change_button(x, y, target, cost));
             }
-            Tile::Open => {
-                changes.push(self.make_change_button(x, y, Tile::Wall));
-            }
-            // no mods available for special tiles
-            Tile::Core | Tile::Spawn => {}
-        }
+        });
 
         html! {
             <div class="info-pane">
@@ -105,9 +124,19 @@ impl Component for DetailView {
 
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
-            DetailViewMsg::ChangeTileButtonClicked { x, y, desired } => {
+            DetailViewMsg::ChangeTileButtonClicked {
+                x,
+                y,
+                desired,
+                costs,
+            } => {
                 self.ecs.with(|world, _| {
-                    world.push((TryChangeTileType { x, y, desired },));
+                    world.push((TryChangeTileType {
+                        x,
+                        y,
+                        desired,
+                        costs,
+                    },));
                 });
             }
         }

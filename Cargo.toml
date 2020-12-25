@@ -13,6 +13,8 @@ yew = "0.17"
 # Used to compile to wasm and link with a JS file
 wasm-bindgen = "0.2.67"
 
+serde = { version = "1", features = ["derive"] }
+
 # cruft
 rand = { version = "0.8" }
 
