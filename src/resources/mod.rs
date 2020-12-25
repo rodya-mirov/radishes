@@ -1,6 +1,10 @@
 use std::collections::{BTreeMap, HashMap};
 
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
+
+mod map;
+
+pub use map::*;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum TdTileSelect {
@@ -72,91 +76,6 @@ impl OwnedResources {
 
             *self.0.entry(*o).or_insert(0) -= other_amt;
         }
-    }
-}
-
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Hash)]
-pub enum Tile {
-    Open,
-    Wall,
-    Spawn,
-    Core,
-}
-
-mod deser {
-    use serde::{
-        de::{self, Visitor},
-        Deserialize,
-    };
-
-    use super::*;
-
-    impl<'de> Deserialize<'de> for Tile {
-        fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-        where
-            D: Deserializer<'de>,
-        {
-            deserializer.deserialize_str(TileDeserializer)
-        }
-    }
-
-    struct TileDeserializer;
-
-    impl<'de> Visitor<'de> for TileDeserializer {
-        type Value = Tile;
-
-        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            formatter.write_str("a string representing a tile")
-        }
-
-        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: de::Error,
-        {
-            match v {
-                "Wall" => Ok(Tile::Wall),
-                "Open" => Ok(Tile::Open),
-                "Spawn" => Ok(Tile::Spawn),
-                "Core" => Ok(Tile::Core),
-                v => Err(E::custom(format!("Unrecognized value {} for Tile", v))),
-            }
-        }
-
-        fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
-        where
-            E: de::Error,
-        {
-            match v.as_str() {
-                "Wall" => Ok(Tile::Wall),
-                "Open" => Ok(Tile::Open),
-                "Spawn" => Ok(Tile::Spawn),
-                "Core" => Ok(Tile::Core),
-                v => Err(E::custom(format!("Unrecognized value {} for Tile", v))),
-            }
-        }
-    }
-}
-
-const DEFAULT_TILE: Tile = Tile::Wall;
-
-#[derive(Clone, Eq, PartialEq, Debug)]
-pub struct Map {
-    map: HashMap<(i32, i32), Tile>,
-}
-
-impl Map {
-    pub fn new() -> Self {
-        Map {
-            map: HashMap::new(),
-        }
-    }
-
-    pub fn get_tile(&self, x: i32, y: i32) -> Tile {
-        self.map.get(&(x, y)).copied().unwrap_or(DEFAULT_TILE)
-    }
-
-    pub fn set_tile(&mut self, x: i32, y: i32, tile: Tile) {
-        self.map.insert((x, y), tile);
     }
 }
 

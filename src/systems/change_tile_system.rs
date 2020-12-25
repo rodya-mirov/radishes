@@ -20,7 +20,7 @@ pub(super) fn process_tile_changes(
             ref costs,
         } = try_change;
 
-        if owned_resources.can_pay(costs) {
+        if owned_resources.can_pay(costs) && map.can_set_tile(*x, *y, *desired) {
             owned_resources.pay(costs);
             map.set_tile(*x, *y, *desired);
             cmd.remove(*entity);

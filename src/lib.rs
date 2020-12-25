@@ -116,7 +116,11 @@ fn make_ecs() -> ECS {
     let world = World::default();
     let mut r = Resources::default();
 
-    r.insert(OwnedResources::new().with(OwnedResource::Money, 10));
+    r.insert(
+        OwnedResources::new()
+            .with(OwnedResource::Money, 50)
+            .with(OwnedResource::Wood, 20),
+    );
 
     let mut map = Map::new();
 

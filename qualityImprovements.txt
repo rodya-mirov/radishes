@@ -4,3 +4,4 @@
 - Drag'n'drop interaction with the map would be nice
 
 - if resources are not payable, color should change and missing resources should be highlighted
+- if tile change would create blocking, color should change and a useful message should be displayed
