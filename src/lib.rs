@@ -28,7 +28,7 @@ mod ecs_wrapper {
         }
 
         pub fn with<A, F: FnOnce(&mut World, &mut Resources) -> A>(&self, f: F) -> A {
-            let mut guard = self.0.lock().unwrap();
+            let mut guard = self.0.lock().expect("ECS lock should be accessible");
 
             let (ref mut w, ref mut r) = &mut *guard;
 
@@ -157,6 +157,13 @@ fn make_ecs() -> ECS {
     transforms.add(TileTransformDesc {
         source: Tile::Open,
         target: Tile::Spawn,
+        cost: OwnedResources::new()
+            .with(OwnedResource::Metal, 15)
+            .with(OwnedResource::Wood, 25),
+    });
+    transforms.add(TileTransformDesc {
+        source: Tile::Open,
+        target: Tile::Core,
         cost: OwnedResources::new()
             .with(OwnedResource::Metal, 15)
             .with(OwnedResource::Wood, 25),

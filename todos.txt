@@ -8,17 +8,6 @@ Next feature set:
 		wave system (after x ticks, next wave spawns)
 		some kind of death condition (if a mob hits your core, you lose one health; if you lose all health, you "die")
 
-	set 2a:
-		can "modify tiles" -- open to wall and vv
-
-	set 2b:
-		modifying tiles costs resources, if the resources are not available then modifying cannot be done
-
-	set 2c:
-		a dijkstra map is maintained spawn -> core;
-			player is not allowed to build a blocker
-			useful message appears in the infopane if they try
-
 	set 3a:
 		monsters exist (prepopulated in init, static) and are rendered
 		just simple circles for now

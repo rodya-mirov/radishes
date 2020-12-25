@@ -34,8 +34,15 @@ canvas:focus {
     border-color: darkblue;
 
     padding: 5%;
+}
 
+.change-tile-button-enabled {
     background-color: cornflowerblue;
+}
+
+.change-tile-button-disabled {
+    color: palegoldenrod;
+    background-color: gray;
 }
 
 #td-canvas {

@@ -2,6 +2,8 @@ use yew::prelude::*;
 
 use web_sys::MouseEvent;
 
+use legion::Resources;
+
 use crate::{components::*, resources::*, ECS};
 
 pub(crate) struct DetailView {
@@ -50,8 +52,20 @@ impl DetailView {
         true
     }
 
-    fn make_change_button(&self, x: i32, y: i32, tile: Tile, costs: OwnedResources) -> Html {
+    fn make_change_button(
+        &self,
+        resources: &Resources,
+        x: i32,
+        y: i32,
+        tile: Tile,
+        costs: OwnedResources,
+    ) -> Html {
         let cost_display = self.make_cost_display(&costs);
+
+        let can_pay = resources.get::<OwnedResources>().unwrap().can_pay(&costs);
+        let can_path = resources.get::<Map>().unwrap().can_set_tile(x, y, tile);
+
+        let would_work = can_pay && can_path;
 
         let click_cb =
             self.link.callback(
@@ -65,10 +79,33 @@ impl DetailView {
 
         let button_text = format!("Change to {:?}", tile);
 
+        let style_class = format!(
+            "change-tile-button {}",
+            if would_work {
+                "change-tile-button-enabled"
+            } else {
+                "change-tile-button-disabled"
+            }
+        );
+
+        let pay_err = if can_pay {
+            html! { <></> }
+        } else {
+            html! { <p> { "You cannot afford this." } </p> }
+        };
+
+        let path_err: Html = if can_path {
+            html! { <></> }
+        } else {
+            html! { <p> { "This would block the exit." } </p> }
+        };
+
         html! {
-            <div onclick=click_cb class="change-tile-button">
+            <div onclick=click_cb class=style_class>
                 <p> { &button_text } </p>
                 { cost_display }
+                { pay_err }
+                { path_err }
             </div>
         }
     }
@@ -97,7 +134,7 @@ impl DetailView {
                 .list_all_for(tile)
                 .into_iter()
             {
-                changes.push(self.make_change_button(x, y, target, cost));
+                changes.push(self.make_change_button(r, x, y, target, cost));
             }
         });
 

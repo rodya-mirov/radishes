@@ -12,17 +12,17 @@ pub(super) fn process_tile_changes(
 ) {
     let mut query = <(Entity, Read<TryChangeTileType>)>::query();
 
-    for (entity, try_change) in query.iter_mut(world) {
-        let TryChangeTileType {
+    for (entity, try_change) in query.iter(world) {
+        let &TryChangeTileType {
             x,
             y,
             desired,
             ref costs,
         } = try_change;
 
-        if owned_resources.can_pay(costs) && map.can_set_tile(*x, *y, *desired) {
+        if owned_resources.can_pay(costs) && map.can_set_tile(x, y, desired) {
             owned_resources.pay(costs);
-            map.set_tile(*x, *y, *desired);
+            map.set_tile(x, y, desired);
         }
 
         cmd.remove(*entity);

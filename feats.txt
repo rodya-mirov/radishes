@@ -24,3 +24,14 @@ Next feature set:
     set 1d:
         keyboard scrolling around the td (arrows to move)
         probably a camera in ECS resources
+
+	set 2a:
+		can "modify tiles" -- open to wall and vv
+
+	set 2b:
+		modifying tiles costs resources, if the resources are not available then modifying cannot be done
+
+	set 2c:
+		a dijkstra map is maintained spawn -> core;
+			player is not allowed to build a blocker
+			useful message appears in the infopane if they try
