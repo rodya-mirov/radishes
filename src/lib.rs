@@ -9,6 +9,8 @@ mod components;
 mod resources;
 mod systems;
 
+mod canvas_util;
+
 mod detail_view;
 mod resource_view;
 mod tower_defense;
@@ -65,7 +67,7 @@ impl Component for Model {
         let tick_handle =
             IntervalService::spawn(std::time::Duration::from_millis(50), tick_cb.clone());
 
-        let schedule = systems::make_schedule();
+        let schedule = systems::make_tick_schedule();
 
         Self {
             ecs,
@@ -111,9 +113,23 @@ impl Component for Model {
 }
 
 fn make_ecs() -> ECS {
-    use resources::*;
+    use {components::*, resources::*};
 
-    let world = World::default();
+    let mut world = World::default();
+
+    for x in 0..5 {
+        for y in 0..5 {
+            world.push((
+                Position {
+                    x: x * 12,
+                    y: y * 8,
+                },
+                TdMob,
+                Renderable::Circle { radius: 3 },
+            ));
+        }
+    }
+
     let mut r = Resources::default();
 
     r.insert(

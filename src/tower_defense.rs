@@ -4,10 +4,10 @@
 use yew::prelude::*;
 use yew::services::ConsoleService;
 
-use wasm_bindgen::{JsCast, JsValue};
-use web_sys::{CanvasRenderingContext2d, DomRect, HtmlCanvasElement, KeyboardEvent, MouseEvent};
+use wasm_bindgen::JsValue;
+use web_sys::{KeyboardEvent, MouseEvent};
 
-use crate::{resources::*, ECS};
+use crate::{canvas_util::with_canvas, resources::*, ECS};
 
 pub(crate) struct TowerDefenseComponent {
     link: ComponentLink<Self>,
@@ -29,50 +29,6 @@ pub(crate) enum ArrowKey {
     Left,
     Right,
     Up,
-}
-
-struct CanvasState {
-    bounding_rect: DomRect,
-    canvas: HtmlCanvasElement,
-    context: CanvasRenderingContext2d,
-}
-
-fn with_canvas<T, F: FnOnce(&mut CanvasState) -> T>(f: F) -> T {
-    let window = web_sys::window().expect("Window should exist");
-
-    let document: web_sys::Document = window.document().expect("Document should exist");
-
-    let canvas = document.get_element_by_id("td-canvas").unwrap();
-
-    let bounding_rect: DomRect = canvas.get_bounding_client_rect();
-
-    let canvas: HtmlCanvasElement = canvas
-        .dyn_into::<HtmlCanvasElement>()
-        .map_err(|_| ())
-        .unwrap();
-
-    let context: CanvasRenderingContext2d = canvas
-        .get_context("2d")
-        .unwrap()
-        .unwrap()
-        .dyn_into::<CanvasRenderingContext2d>()
-        .unwrap();
-
-    context.set_transform(1., 0., 0., 1., 0., 0.).unwrap();
-
-    context.save();
-
-    let mut state = CanvasState {
-        bounding_rect,
-        canvas,
-        context,
-    };
-
-    let t = f(&mut state);
-
-    state.context.restore();
-
-    t
 }
 
 const TILE_WIDTH_PIXELS: i32 = 30;
@@ -223,6 +179,11 @@ impl TowerDefenseComponent {
                         );
                     }
                 }
+            });
+
+            self.ecs.with(|world, resources| {
+                crate::systems::canvas_render_schedule(canvas_state.clone())
+                    .execute(world, resources);
             });
         });
     }

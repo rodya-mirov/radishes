@@ -2,3 +2,6 @@
 - Keydown/keyup navigation would be a lot nicer
 
 - Drag'n'drop interaction with the map would be nice
+
+- Monsters using images instead of circles would be nice
+- Tiles using images instead of boxes would be nice
