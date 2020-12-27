@@ -16,12 +16,9 @@ Next feature set:
 		exactly one spawn + core tile
 		monsters spawn at spawn point
 		monsters proceed to core
-		health loss can occur
 
 	set 3c:
-		monsters come in waves -- after [n] ticks, the next wave spawns
-
-	set 3d:
+		health loss can occur
 		if health <= 0, some kind of death condition (design TBA; better than "crash the game")
 
 	set 4a:

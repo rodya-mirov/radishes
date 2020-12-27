@@ -160,6 +160,14 @@ impl Map {
 
         winning_coords
     }
+
+    pub fn all_spawns(&self) -> Vec<(i32, i32)> {
+        self.map
+            .iter()
+            .filter(|(_pos, tile)| **tile == Tile::Spawn)
+            .map(|(pos, _)| *pos)
+            .collect()
+    }
 }
 
 impl Tile {

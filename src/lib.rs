@@ -1,9 +1,12 @@
+use wasm_bindgen::prelude::*;
+use yew::{
+    prelude::*,
+    services::{IntervalService, Task},
+};
+
 use legion::{Resources, Schedule, World};
 
-use wasm_bindgen::prelude::*;
-
-use yew::prelude::*;
-use yew::services::{IntervalService, Task};
+pub use ecs_wrapper::ECS;
 
 mod tile_helpers;
 
@@ -13,12 +16,13 @@ mod systems;
 
 mod canvas_util;
 
+// TODO: put all these view components into a module, and move it out of lib
 mod detail_view;
+mod launch_wave_view;
 mod resource_view;
-mod tower_defense;
+mod td_view;
 
 mod ecs_wrapper {
-
     use std::sync::{Arc, Mutex};
 
     use legion::{Resources, World};
@@ -40,8 +44,6 @@ mod ecs_wrapper {
         }
     }
 }
-
-pub use ecs_wrapper::ECS;
 
 struct Model {
     _link: ComponentLink<Self>,
@@ -102,9 +104,10 @@ impl Component for Model {
         html! {
             <div id="game-div">
                 <div id="tower-defense-div">
-                    <tower_defense::TowerDefenseComponent ecs={self.ecs.clone()} />
+                    <td_view::TowerDefenseComponent ecs={self.ecs.clone()} />
                 </div>
                 <div class="info-pane-main-div">
+                    <launch_wave_view::LaunchWaveView ecs={self.ecs.clone()} />
                     <resource_view::ResourceView ecs={self.ecs.clone()} />
                     <detail_view::DetailView ecs={self.ecs.clone()} />
                 </div>
@@ -114,22 +117,9 @@ impl Component for Model {
 }
 
 fn make_ecs() -> ECS {
-    use {components::*, resources::*};
+    use resources::*;
 
-    let mut world = World::default();
-
-    for x in (-10)..15 {
-        for y in -10..15 {
-            world.push((
-                Position {
-                    x: x * 30 + 15,
-                    y: y * 30 + 15,
-                },
-                TdMob,
-                Renderable::Circle { radius: 10 },
-            ));
-        }
-    }
+    let world = World::default();
 
     let mut r = Resources::default();
 
@@ -137,6 +127,14 @@ fn make_ecs() -> ECS {
 
     let mut map = Map::new();
 
+    map.set_tile(8, 0, Tile::Spawn);
+    map.set_tile(8, 1, Tile::Open);
+    map.set_tile(8, 2, Tile::Open);
+    map.set_tile(8, 3, Tile::Open);
+    map.set_tile(7, 3, Tile::Open);
+    map.set_tile(6, 3, Tile::Open);
+    map.set_tile(5, 3, Tile::Open);
+    map.set_tile(4, 3, Tile::Open);
     map.set_tile(0, 0, Tile::Spawn);
     map.set_tile(0, 1, Tile::Open);
     map.set_tile(0, 2, Tile::Open);

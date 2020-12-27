@@ -40,6 +40,23 @@ pub const ALL_RESOURCES: &[OwnedResource] = &[OwnedResource::Wood, OwnedResource
 #[derive(Deserialize, Clone, Eq, PartialEq, Debug, Default)]
 pub struct OwnedResources(pub BTreeMap<OwnedResource, i64>);
 
+#[derive(Deserialize, Copy, Clone, Eq, PartialEq, Debug)]
+pub struct NextWaveState {
+    /// The next wave to be launched
+    pub next_wave: usize,
+    /// Remaining ticks until a new wave can be launched
+    pub delay_ticks: usize,
+}
+
+impl Default for NextWaveState {
+    fn default() -> Self {
+        NextWaveState {
+            next_wave: 1,
+            delay_ticks: 0,
+        }
+    }
+}
+
 impl OwnedResources {
     pub fn new() -> Self {
         Default::default()

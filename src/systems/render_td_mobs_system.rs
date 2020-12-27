@@ -7,13 +7,18 @@ use crate::{canvas_util::CanvasState, components::*, resources::*};
 #[system]
 #[read_component(Position)]
 #[read_component(Renderable)]
+#[read_component(Hidden)]
 pub(super) fn render_mobs(#[state] canvas_state: &mut CanvasState, #[resource] camera: &TdCamera, world: &SubWorld) {
     let ctx = &canvas_state.context;
-    let mut query = <(Read<Position>, Read<Renderable>)>::query();
+    let mut query = <(Read<Position>, Read<Renderable>, TryRead<Hidden>)>::query();
 
     ctx.set_stroke_style(&JsValue::from("goldenrod"));
 
-    for (pos, rend) in query.iter(world) {
+    for (pos, rend, hidden) in query.iter(world) {
+        if hidden.is_some() {
+            continue;
+        }
+
         match rend {
             &Renderable::Circle { radius } => {
                 let xmin = pos.x - radius;

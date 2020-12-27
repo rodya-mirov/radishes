@@ -15,11 +15,16 @@ const DIAG_MOVE_SPEED: i32 = 1;
 #[system]
 #[write_component(Position)]
 #[read_component(TdMob)]
+#[read_component(WaveState)]
 // Note -- map is &mut because we have to verify the dijkstra map is fresh
 pub(super) fn move_mobs(#[resource] map: &mut Map, world: &mut SubWorld) {
-    let mut query = <(Write<Position>, Read<TdMob>)>::query();
+    let mut query = <(Write<Position>, Read<TdMob>, Read<WaveState>)>::query();
 
-    for (mut pos, _) in query.iter_mut(world) {
+    for (mut pos, _, wave_state) in query.iter_mut(world) {
+        if !matches!(wave_state.wait_state, WaitState::Active) {
+            continue;
+        }
+
         // at the moment, the position is the center of the mob, and is used to compute which tile
         // they're on, for the purpose of pathing. They figure out their goal tile and move toward
         // the center of it.
