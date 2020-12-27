@@ -5,6 +5,7 @@ use crate::canvas_util::CanvasState;
 mod change_tile_system;
 mod launch_wave_system;
 
+mod mob_core_system;
 mod mob_movement_system;
 mod wave_update_system;
 
@@ -17,6 +18,8 @@ pub fn make_tick_schedule() -> Schedule {
         .add_system(wave_update_system::update_wave_state_system())
         .flush()
         .add_system(mob_movement_system::move_mobs_system())
+        .flush()
+        .add_system(mob_core_system::mob_core_hits_system())
         .build()
 }
 

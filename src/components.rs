@@ -12,8 +12,12 @@ pub struct TryChangeTileType {
 
 /// Message component; the user has attempted to initiate a new wave
 /// TODO: should this be a resource instead? Maybe it makes more sense to just have a Queue of these things
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct TryLaunchWave;
+
+/// Indicates the entity has touched the core.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct TouchedCore;
 
 /// Component indicating the entity has a world position in pixels
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]

@@ -19,6 +19,8 @@ Next feature set:
 
 	set 3c:
 		health loss can occur
+
+    set 3d:
 		if health <= 0, some kind of death condition (design TBA; better than "crash the game")
 
 	set 4a:

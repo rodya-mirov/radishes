@@ -7,7 +7,6 @@ use crate::components::*;
 
 #[system]
 #[write_component(WaveState)]
-// Note -- map is &mut because we have to verify the dijkstra map is fresh
 pub(super) fn update_wave_state(cmd: &mut CommandBuffer, world: &mut SubWorld) {
     let mut query = <(Entity, Write<WaveState>)>::query();
 

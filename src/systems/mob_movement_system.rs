@@ -1,7 +1,7 @@
 //! Describes how mobs move each tick. Very uniform for now; lots of constants will eventually
 //! be moved out to configurable components as we have different kinds of mobs and so on.
 
-use legion::{world::SubWorld, *};
+use legion::{systems::CommandBuffer, world::SubWorld, *};
 
 use crate::{
     components::*,
@@ -17,10 +17,10 @@ const DIAG_MOVE_SPEED: i32 = 1;
 #[read_component(TdMob)]
 #[read_component(WaveState)]
 // Note -- map is &mut because we have to verify the dijkstra map is fresh
-pub(super) fn move_mobs(#[resource] map: &mut Map, world: &mut SubWorld) {
-    let mut query = <(Write<Position>, Read<TdMob>, Read<WaveState>)>::query();
+pub(super) fn move_mobs(#[resource] map: &mut Map, cmd: &mut CommandBuffer, world: &mut SubWorld) {
+    let mut query = <(Entity, Write<Position>, Read<TdMob>, Read<WaveState>)>::query();
 
-    for (mut pos, _, wave_state) in query.iter_mut(world) {
+    for (entity, mut pos, _, wave_state) in query.iter_mut(world) {
         if !matches!(wave_state.wait_state, WaitState::Active) {
             continue;
         }
@@ -39,6 +39,14 @@ pub(super) fn move_mobs(#[resource] map: &mut Map, world: &mut SubWorld) {
 
             pos.x += dx * speed;
             pos.y += dy * speed;
+        }
+
+        // If they're now in the core
+        if let Some((tile_x, tile_y)) = coords_to_tile(pos.x, pos.y) {
+            match map.get_tile(tile_x, tile_y) {
+                Tile::Core => cmd.add_component(*entity, TouchedCore),
+                _ => {}
+            }
         }
     }
 }
