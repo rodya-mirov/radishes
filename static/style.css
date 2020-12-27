@@ -24,6 +24,21 @@
     border-color: black;
 }
 
+.health-view {
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 5px;
+
+    padding: 10px;
+
+    font-size: 1em;
+
+    width: 100%;
+    border-color: black;
+
+    background-color: darksalmon;
+}
+
 .launch-wave-div-enabled {
     background-color: cornflowerblue;
 }

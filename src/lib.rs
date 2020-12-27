@@ -18,6 +18,7 @@ mod canvas_util;
 
 // TODO: put all these view components into a module, and move it out of lib
 mod detail_view;
+mod health_view;
 mod launch_wave_view;
 mod resource_view;
 mod td_view;
@@ -107,6 +108,7 @@ impl Component for Model {
                     <td_view::TowerDefenseComponent ecs={self.ecs.clone()} />
                 </div>
                 <div class="info-pane-main-div">
+                    <health_view::HealthView ecs={self.ecs.clone()} />
                     <launch_wave_view::LaunchWaveView ecs={self.ecs.clone()} />
                     <resource_view::ResourceView ecs={self.ecs.clone()} />
                     <detail_view::DetailView ecs={self.ecs.clone()} />

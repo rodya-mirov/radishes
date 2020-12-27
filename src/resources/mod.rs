@@ -92,6 +92,18 @@ impl OwnedResources {
     }
 }
 
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct PlayerHealth {
+    pub health: i32,
+    pub max: i32,
+}
+
+impl Default for PlayerHealth {
+    fn default() -> Self {
+        PlayerHealth { health: 20, max: 20 }
+    }
+}
+
 #[derive(Copy, Clone, Eq, PartialEq, Default)]
 pub struct TdCamera {
     /// Top pixel on camera
