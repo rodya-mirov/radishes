@@ -35,11 +35,7 @@ impl std::fmt::Display for OwnedResource {
     }
 }
 
-pub const ALL_RESOURCES: &[OwnedResource] = &[
-    OwnedResource::Wood,
-    OwnedResource::Metal,
-    OwnedResource::Money,
-];
+pub const ALL_RESOURCES: &[OwnedResource] = &[OwnedResource::Wood, OwnedResource::Metal, OwnedResource::Money];
 
 #[derive(Deserialize, Clone, Eq, PartialEq, Debug, Default)]
 pub struct OwnedResources(pub BTreeMap<OwnedResource, i64>);
@@ -112,9 +108,6 @@ impl TileTransforms {
     }
 
     pub fn list_all_for(&self, source: Tile) -> HashMap<Tile, OwnedResources> {
-        self.map
-            .get(&source)
-            .cloned()
-            .unwrap_or_else(|| Default::default())
+        self.map.get(&source).cloned().unwrap_or_else(|| Default::default())
     }
 }

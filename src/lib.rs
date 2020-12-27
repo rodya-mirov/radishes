@@ -5,6 +5,8 @@ use wasm_bindgen::prelude::*;
 use yew::prelude::*;
 use yew::services::{IntervalService, Task};
 
+mod tile_helpers;
+
 mod components;
 mod resources;
 mod systems;
@@ -64,8 +66,7 @@ impl Component for Model {
             // ConsoleService::log("tick Tick TICK");
             ModelMsg::Tick
         });
-        let tick_handle =
-            IntervalService::spawn(std::time::Duration::from_millis(50), tick_cb.clone());
+        let tick_handle = IntervalService::spawn(std::time::Duration::from_millis(50), tick_cb.clone());
 
         let schedule = systems::make_tick_schedule();
 
@@ -117,26 +118,22 @@ fn make_ecs() -> ECS {
 
     let mut world = World::default();
 
-    for x in 0..5 {
-        for y in 0..5 {
+    for x in (-10)..15 {
+        for y in -10..15 {
             world.push((
                 Position {
-                    x: x * 12,
-                    y: y * 8,
+                    x: x * 30 + 15,
+                    y: y * 30 + 15,
                 },
                 TdMob,
-                Renderable::Circle { radius: 3 },
+                Renderable::Circle { radius: 10 },
             ));
         }
     }
 
     let mut r = Resources::default();
 
-    r.insert(
-        OwnedResources::new()
-            .with(OwnedResource::Money, 50)
-            .with(OwnedResource::Wood, 20),
-    );
+    r.insert(OwnedResources::new().with(OwnedResource::Money, 50).with(OwnedResource::Wood, 20));
 
     let mut map = Map::new();
 
@@ -154,16 +151,17 @@ fn make_ecs() -> ECS {
 
     r.insert(map);
 
-    r.insert(TdCamera::default());
+    let mut camera = TdCamera::default();
+    camera.top = -100;
+    camera.left = -100;
+    r.insert(camera);
 
     // TODO: probably put these in "raws" somewhere
     let mut transforms = TileTransforms::new();
     transforms.add(TileTransformDesc {
         source: Tile::Open,
         target: Tile::Wall,
-        cost: OwnedResources::new()
-            .with(OwnedResource::Money, 5)
-            .with(OwnedResource::Wood, 5),
+        cost: OwnedResources::new().with(OwnedResource::Money, 5).with(OwnedResource::Wood, 5),
     });
     transforms.add(TileTransformDesc {
         source: Tile::Wall,
@@ -173,16 +171,12 @@ fn make_ecs() -> ECS {
     transforms.add(TileTransformDesc {
         source: Tile::Open,
         target: Tile::Spawn,
-        cost: OwnedResources::new()
-            .with(OwnedResource::Metal, 15)
-            .with(OwnedResource::Wood, 25),
+        cost: OwnedResources::new().with(OwnedResource::Metal, 15).with(OwnedResource::Wood, 25),
     });
     transforms.add(TileTransformDesc {
         source: Tile::Open,
         target: Tile::Core,
-        cost: OwnedResources::new()
-            .with(OwnedResource::Metal, 15)
-            .with(OwnedResource::Wood, 25),
+        cost: OwnedResources::new().with(OwnedResource::Metal, 15).with(OwnedResource::Wood, 25),
     });
 
     r.insert(transforms);

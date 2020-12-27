@@ -17,10 +17,7 @@ pub fn with_canvas<T, F: FnOnce(&mut CanvasState) -> T>(f: F) -> T {
 
     let bounding_rect: DomRect = canvas.get_bounding_client_rect();
 
-    let canvas: HtmlCanvasElement = canvas
-        .dyn_into::<HtmlCanvasElement>()
-        .map_err(|_| ())
-        .unwrap();
+    let canvas: HtmlCanvasElement = canvas.dyn_into::<HtmlCanvasElement>().map_err(|_| ()).unwrap();
 
     let context: CanvasRenderingContext2d = canvas
         .get_context("2d")

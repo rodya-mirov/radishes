@@ -7,11 +7,7 @@ use crate::{canvas_util::CanvasState, components::*, resources::*};
 #[system]
 #[read_component(Position)]
 #[read_component(Renderable)]
-pub(super) fn render_mobs(
-    #[state] canvas_state: &mut CanvasState,
-    #[resource] camera: &TdCamera,
-    world: &SubWorld,
-) {
+pub(super) fn render_mobs(#[state] canvas_state: &mut CanvasState, #[resource] camera: &TdCamera, world: &SubWorld) {
     let ctx = &canvas_state.context;
     let mut query = <(Read<Position>, Read<Renderable>)>::query();
 

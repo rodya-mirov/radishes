@@ -2,12 +2,16 @@
 //! an entire game, but the "view" is just a canvas, so that works well)
 
 use yew::prelude::*;
-use yew::services::ConsoleService;
 
 use wasm_bindgen::JsValue;
 use web_sys::{KeyboardEvent, MouseEvent};
 
-use crate::{canvas_util::with_canvas, resources::*, ECS};
+use crate::{
+    canvas_util::with_canvas,
+    resources::*,
+    tile_helpers::{coords_to_tile_buffered, TILE_HEIGHT_PIXELS, TILE_WIDTH_PIXELS},
+    ECS,
+};
 
 pub(crate) struct TowerDefenseComponent {
     link: ComponentLink<Self>,
@@ -29,48 +33,6 @@ pub(crate) enum ArrowKey {
     Left,
     Right,
     Up,
-}
-
-const TILE_WIDTH_PIXELS: i32 = 30;
-const TILE_HEIGHT_PIXELS: i32 = 30;
-
-/// Given pixel coordinates x and y (already transformed to "world" pixels), transform them
-/// into a tile coordinate. Note that if it's too close to the border, it will return None, to avoid
-/// madness.
-///
-/// :param border_offset -- Used to say when the next tile starts. e.g. if given 1,
-///     and the tile width is 30, this means that a tile "starts" on 1, 31, etc.
-fn coords_to_tile(x: i32, y: i32, border_offset: i32) -> Option<(i32, i32)> {
-    let tile_x = safe_div(x - border_offset, TILE_WIDTH_PIXELS, 2)?;
-
-    let tile_y = safe_div(y - border_offset, TILE_HEIGHT_PIXELS, 2)?;
-
-    ConsoleService::log(&format!(
-        "Given relative pixels {}, {}, in squares {}, {} (BO {}); found coordinates {}, {}",
-        x, y, TILE_WIDTH_PIXELS, TILE_HEIGHT_PIXELS, border_offset, tile_x, tile_y
-    ));
-
-    Some((tile_x, tile_y))
-}
-
-// TODO: doc
-fn safe_div(amt: i32, div: i32, tol: i32) -> Option<i32> {
-    if tol < 0 {
-        return safe_div(amt, div, -tol);
-    }
-
-    if div <= 0 {
-        // TODO: logging about bad inputs
-        return None;
-    }
-
-    let m = amt.rem_euclid(div);
-    if m < tol || div - m - 1 < tol {
-        return None;
-    }
-
-    let out = amt.div_euclid(div);
-    Some(out)
 }
 
 fn div_round_up(amt: i32, div: i32) -> i32 {
@@ -117,8 +79,7 @@ impl TowerDefenseComponent {
                 let y_pixel_offset = -(camera.top.rem_euclid(TILE_HEIGHT_PIXELS));
                 let y_min_pixel = camera.top + y_pixel_offset;
                 let y_min_tile = y_min_pixel / TILE_HEIGHT_PIXELS;
-                let num_tiles_tall =
-                    div_round_up(canvas_height - y_pixel_offset, TILE_HEIGHT_PIXELS);
+                let num_tiles_tall = div_round_up(canvas_height - y_pixel_offset, TILE_HEIGHT_PIXELS);
 
                 let black = JsValue::from("#000000");
                 let highlighted = JsValue::from("#DCFB3E");
@@ -160,12 +121,7 @@ impl TowerDefenseComponent {
                         let x_left_pixel = x_pixel_offset + (x_ind * TILE_WIDTH_PIXELS);
                         let y_top_pixel = y_pixel_offset + (y_ind * TILE_HEIGHT_PIXELS);
 
-                        if hover_state
-                            == (TdTileSelect::Selected {
-                                x: tile_x,
-                                y: tile_y,
-                            })
-                        {
+                        if hover_state == (TdTileSelect::Selected { x: tile_x, y: tile_y }) {
                             canvas_state.context.set_stroke_style(&highlighted);
                         } else {
                             canvas_state.context.set_stroke_style(&black);
@@ -182,8 +138,7 @@ impl TowerDefenseComponent {
             });
 
             self.ecs.with(|world, resources| {
-                crate::systems::canvas_render_schedule(canvas_state.clone())
-                    .execute(world, resources);
+                crate::systems::canvas_render_schedule(canvas_state.clone()).execute(world, resources);
             });
         });
     }
@@ -202,10 +157,7 @@ impl Component for TowerDefenseComponent {
     type Properties = TDProps;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self {
-            link,
-            ecs: props.ecs,
-        }
+        Self { link, ecs: props.ecs }
     }
 
     fn update(&mut self, msg: Self::Message) -> bool {
@@ -217,12 +169,9 @@ impl Component for TowerDefenseComponent {
                     (camera.left, camera.top)
                 });
 
-                if let Some((tile_x, tile_y)) = coords_to_tile(x + left, y + top, 2) {
+                if let Some((tile_x, tile_y)) = coords_to_tile_buffered(x + left, y + top, 2) {
                     self.ecs.with(|_, r| {
-                        *r.get_mut_or_default::<TdTileSelect>() = TdTileSelect::Selected {
-                            x: tile_x,
-                            y: tile_y,
-                        };
+                        *r.get_mut_or_default::<TdTileSelect>() = TdTileSelect::Selected { x: tile_x, y: tile_y };
                     });
                 }
             }
@@ -279,16 +228,14 @@ impl Component for TowerDefenseComponent {
             TDMessage::ClickedPixel { x, y }
         });
 
-        let kd_cb = self
-            .link
-            .callback(|e: KeyboardEvent| match e.code().as_str() {
-                "ArrowDown" | "KeyS" => TDMessage::ArrowKeyDown(ArrowKey::Down),
-                "ArrowUp" | "KeyW" => TDMessage::ArrowKeyDown(ArrowKey::Up),
-                "ArrowLeft" | "KeyA" => TDMessage::ArrowKeyDown(ArrowKey::Left),
-                "ArrowRight" | "KeyD" => TDMessage::ArrowKeyDown(ArrowKey::Right),
-                "Escape" => TDMessage::Cancel,
-                _ => TDMessage::Nothing,
-            });
+        let kd_cb = self.link.callback(|e: KeyboardEvent| match e.code().as_str() {
+            "ArrowDown" | "KeyS" => TDMessage::ArrowKeyDown(ArrowKey::Down),
+            "ArrowUp" | "KeyW" => TDMessage::ArrowKeyDown(ArrowKey::Up),
+            "ArrowLeft" | "KeyA" => TDMessage::ArrowKeyDown(ArrowKey::Left),
+            "ArrowRight" | "KeyD" => TDMessage::ArrowKeyDown(ArrowKey::Right),
+            "Escape" => TDMessage::Cancel,
+            _ => TDMessage::Nothing,
+        });
 
         html! {
             <canvas id="td-canvas" tabIndex=1 onclick=click_cb onmousemove=hover_cb onkeydown=kd_cb />

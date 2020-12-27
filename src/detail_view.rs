@@ -52,14 +52,7 @@ impl DetailView {
         true
     }
 
-    fn make_change_button(
-        &self,
-        resources: &Resources,
-        x: i32,
-        y: i32,
-        tile: Tile,
-        costs: OwnedResources,
-    ) -> Html {
+    fn make_change_button(&self, resources: &Resources, x: i32, y: i32, tile: Tile, costs: OwnedResources) -> Html {
         let cost_display = self.make_cost_display(&costs);
 
         let can_pay = resources.get::<OwnedResources>().unwrap().can_pay(&costs);
@@ -67,15 +60,12 @@ impl DetailView {
 
         let would_work = can_pay && can_path;
 
-        let click_cb =
-            self.link.callback(
-                move |_: MouseEvent| DetailViewMsg::ChangeTileButtonClicked {
-                    x,
-                    y,
-                    desired: tile,
-                    costs: costs.clone(),
-                },
-            );
+        let click_cb = self.link.callback(move |_: MouseEvent| DetailViewMsg::ChangeTileButtonClicked {
+            x,
+            y,
+            desired: tile,
+            costs: costs.clone(),
+        });
 
         let button_text = format!("Change to {:?}", tile);
 
@@ -128,12 +118,7 @@ impl DetailView {
 
         let mut changes: Vec<Html> = Vec::new();
         self.ecs.with(|_, r| {
-            for (target, cost) in r
-                .get::<TileTransforms>()
-                .unwrap()
-                .list_all_for(tile)
-                .into_iter()
-            {
+            for (target, cost) in r.get::<TileTransforms>().unwrap().list_all_for(tile).into_iter() {
                 changes.push(self.make_change_button(r, x, y, target, cost));
             }
         });
@@ -161,19 +146,9 @@ impl Component for DetailView {
 
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
-            DetailViewMsg::ChangeTileButtonClicked {
-                x,
-                y,
-                desired,
-                costs,
-            } => {
+            DetailViewMsg::ChangeTileButtonClicked { x, y, desired, costs } => {
                 self.ecs.with(|world, _| {
-                    world.push((TryChangeTileType {
-                        x,
-                        y,
-                        desired,
-                        costs,
-                    },));
+                    world.push((TryChangeTileType { x, y, desired, costs },));
                 });
             }
         }

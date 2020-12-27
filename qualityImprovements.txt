@@ -5,3 +5,8 @@
 
 - Monsters using images instead of circles would be nice
 - Tiles using images instead of boxes would be nice
+    This requires some kind of asset loading pipeline that I don't really
+    want to deal with :/ but obviously will be needed eventually
+
+- Somehow preventing monsters from completely coinciding would be nice
+    Not sure what's to be done about this

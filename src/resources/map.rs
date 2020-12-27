@@ -31,9 +31,7 @@ struct DijkstraMap {
 
 impl DijkstraMap {
     fn new() -> Self {
-        DijkstraMap {
-            costs: HashMap::new(),
-        }
+        DijkstraMap { costs: HashMap::new() }
     }
 
     /// Recompute the path costs. Assumptions (which can be refactored out as lambdas as needed):
@@ -52,10 +50,7 @@ impl DijkstraMap {
         // Note cost cmp reversed, so the heap will be a min heap
         impl Ord for NodeWeight {
             fn cmp(&self, other: &Self) -> Ordering {
-                other
-                    .cost
-                    .cmp(&self.cost)
-                    .then_with(|| self.pos.cmp(&other.pos))
+                other.cost.cmp(&self.cost).then_with(|| self.pos.cmp(&other.pos))
             }
         }
 
@@ -139,6 +134,31 @@ impl Map {
         self.core_paths.recompute(&self.map);
 
         self.dijkstra_maps_dirty = false;
+    }
+
+    /// Get the tile coordinates of the best tile to move to, from here.
+    /// If there is no improvement possible (either because you're "there" or because there's no
+    /// path) just return the input.
+    pub fn move_toward_spawn(&mut self, start_x: i32, start_y: i32) -> (i32, i32) {
+        self.recompute_dijkstra_maps();
+
+        let mut least_cost = self.core_paths.costs.get(&(start_x, start_y)).copied().unwrap_or(i32::max_value());
+        let mut winning_coords = (start_x, start_y);
+
+        for (x, y) in neighbors(start_x, start_y)
+            .iter()
+            .copied()
+            .filter(|(x, y)| self.map.get(&(*x, *y)).copied().unwrap_or(DEFAULT_TILE).is_passable())
+        {
+            let cost = self.core_paths.costs.get(&(x, y)).copied().unwrap_or(i32::max_value());
+
+            if cost < least_cost {
+                least_cost = cost;
+                winning_coords = (x, y);
+            }
+        }
+
+        winning_coords
     }
 }
 
