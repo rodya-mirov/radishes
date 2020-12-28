@@ -113,9 +113,6 @@ impl DetailView {
     fn tile_details(&self, x: i32, y: i32, tile: Tile) -> Html {
         let tile_str = format!("Selected tile at ({}, {}): {:?}", x, y, tile);
 
-        // TODO: add a button to turn the tile into a different kind of tile
-        // this should be achieved by launching a message to the ECS and having a system take care of it
-
         let mut changes: Vec<Html> = Vec::new();
         self.ecs.with(|_, r| {
             for (target, cost) in r.get::<TileTransforms>().unwrap().list_all_for(tile).into_iter() {

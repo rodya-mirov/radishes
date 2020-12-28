@@ -4,7 +4,7 @@ use yew::{
     services::{IntervalService, Task},
 };
 
-use legion::{Resources, Schedule, World};
+use legion::Schedule;
 
 pub use ecs_wrapper::ECS;
 
@@ -16,12 +16,8 @@ mod systems;
 
 mod canvas_util;
 
-// TODO: put all these view components into a module, and move it out of lib
-mod detail_view;
-mod health_view;
-mod launch_wave_view;
-mod resource_view;
-mod td_view;
+mod game_view;
+mod new_game_view;
 
 mod ecs_wrapper {
     use std::sync::{Arc, Mutex};
@@ -32,8 +28,8 @@ mod ecs_wrapper {
     pub struct ECS(Arc<Mutex<(World, Resources)>>);
 
     impl ECS {
-        pub fn new(world: World, resources: Resources) -> Self {
-            ECS(Arc::new(Mutex::new((world, resources))))
+        pub fn new() -> Self {
+            ECS(Arc::new(Mutex::new((World::default(), Resources::default()))))
         }
 
         pub fn with<A, F: FnOnce(&mut World, &mut Resources) -> A>(&self, f: F) -> A {
@@ -46,47 +42,59 @@ mod ecs_wrapper {
     }
 }
 
-struct Model {
-    _link: ComponentLink<Self>,
-    _tick_handle: Box<dyn Task>,
+struct View {
     ecs: ECS,
     schedule: Schedule,
+
+    // We have to keep a reference to this; it keeps triggering until it's dropped
+    _tick_handle: Box<dyn Task>,
 }
 
-enum ModelMsg {
+enum ViewMsg {
     Tick,
 }
 
-impl Component for Model {
-    type Message = ModelMsg;
+impl Component for View {
+    type Message = ViewMsg;
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let ecs = make_ecs();
+        let ecs = ECS::new();
 
-        let tick_cb = link.callback(|()| {
-            // uncomment to verify that in fact the ticker IS working
-            // ConsoleService::log("tick Tick TICK");
-            ModelMsg::Tick
+        ecs.with(|_, r| {
+            r.insert(resources::GameState::Opening);
         });
-        let tick_handle = IntervalService::spawn(std::time::Duration::from_millis(50), tick_cb.clone());
 
-        let schedule = systems::make_tick_schedule();
+        game_view::init_ecs(&ecs);
+
+        let tick_cb = link.callback(|()| ViewMsg::Tick);
+
+        let tick_handle = IntervalService::spawn(std::time::Duration::from_millis(50), tick_cb);
+
+        let schedule = crate::systems::make_tick_schedule();
 
         Self {
             ecs,
-            schedule,
-            _link: link,
             _tick_handle: Box::new(tick_handle),
+            schedule,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> bool {
+        use resources::GameState;
+
         match msg {
-            ModelMsg::Tick => {
+            ViewMsg::Tick => {
                 let schedule = &mut self.schedule;
                 self.ecs.with(|world, resources| {
-                    schedule.execute(world, resources);
+                    let should_run_tick = match *resources.get::<GameState>().unwrap() {
+                        GameState::MainGame => true,
+                        GameState::Opening => false,
+                    };
+
+                    if should_run_tick {
+                        schedule.execute(world, resources);
+                    }
                 });
 
                 true
@@ -94,97 +102,39 @@ impl Component for Model {
         }
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        // Should only return "true" if new properties are different to
-        // previously received properties.
-        // This component has no properties so we will always return "false".
+    fn change(&mut self, _props: Self::Properties) -> bool {
         false
     }
 
     fn view(&self) -> Html {
-        html! {
-            <div id="game-div">
-                <div id="tower-defense-div">
-                    <td_view::TowerDefenseComponent ecs={self.ecs.clone()} />
-                </div>
-                <div class="info-pane-main-div">
-                    <health_view::HealthView ecs={self.ecs.clone()} />
-                    <launch_wave_view::LaunchWaveView ecs={self.ecs.clone()} />
-                    <resource_view::ResourceView ecs={self.ecs.clone()} />
-                    <detail_view::DetailView ecs={self.ecs.clone()} />
-                </div>
-            </div>
+        use resources::GameState;
+
+        let game_state = self.ecs.with(|_, r| *r.get::<GameState>().unwrap());
+
+        match game_state {
+            GameState::Opening => self.render_opening(),
+            GameState::MainGame => self.render_main_game(),
         }
     }
 }
 
-fn make_ecs() -> ECS {
-    use resources::*;
+impl View {
+    fn render_opening(&self) -> Html {
+        html! {
+            <new_game_view::NewGameView ecs=self.ecs.clone() />
+        }
+    }
 
-    let world = World::default();
-
-    let mut r = Resources::default();
-
-    r.insert(OwnedResources::new().with(OwnedResource::Money, 50).with(OwnedResource::Wood, 20));
-
-    let mut map = Map::new();
-
-    map.set_tile(8, 0, Tile::Spawn);
-    map.set_tile(8, 1, Tile::Open);
-    map.set_tile(8, 2, Tile::Open);
-    map.set_tile(8, 3, Tile::Open);
-    map.set_tile(7, 3, Tile::Open);
-    map.set_tile(6, 3, Tile::Open);
-    map.set_tile(5, 3, Tile::Open);
-    map.set_tile(4, 3, Tile::Open);
-    map.set_tile(0, 0, Tile::Spawn);
-    map.set_tile(0, 1, Tile::Open);
-    map.set_tile(0, 2, Tile::Open);
-    map.set_tile(1, 2, Tile::Open);
-    map.set_tile(2, 2, Tile::Open);
-    map.set_tile(3, 2, Tile::Open);
-    map.set_tile(4, 2, Tile::Open);
-    map.set_tile(4, 1, Tile::Open);
-    map.set_tile(4, 0, Tile::Open);
-    map.set_tile(4, -1, Tile::Open);
-    map.set_tile(4, -2, Tile::Core);
-
-    r.insert(map);
-
-    let mut camera = TdCamera::default();
-    camera.top = -100;
-    camera.left = -100;
-    r.insert(camera);
-
-    // TODO: probably put these in "raws" somewhere
-    let mut transforms = TileTransforms::new();
-    transforms.add(TileTransformDesc {
-        source: Tile::Open,
-        target: Tile::Wall,
-        cost: OwnedResources::new().with(OwnedResource::Money, 5).with(OwnedResource::Wood, 5),
-    });
-    transforms.add(TileTransformDesc {
-        source: Tile::Wall,
-        target: Tile::Open,
-        cost: OwnedResources::new().with(OwnedResource::Money, 3),
-    });
-    transforms.add(TileTransformDesc {
-        source: Tile::Open,
-        target: Tile::Spawn,
-        cost: OwnedResources::new().with(OwnedResource::Metal, 15).with(OwnedResource::Wood, 25),
-    });
-    transforms.add(TileTransformDesc {
-        source: Tile::Open,
-        target: Tile::Core,
-        cost: OwnedResources::new().with(OwnedResource::Metal, 15).with(OwnedResource::Wood, 25),
-    });
-
-    r.insert(transforms);
-
-    ECS::new(world, r)
+    fn render_main_game(&self) -> Html {
+        html! {
+            <game_view::GameView ecs=self.ecs.clone() />
+        }
+    }
 }
 
 #[wasm_bindgen(start)]
 pub fn run_app() {
-    App::<Model>::new().mount_to_body();
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+
+    App::<View>::new().mount_to_body();
 }

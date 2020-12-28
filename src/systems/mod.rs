@@ -11,6 +11,7 @@ mod wave_update_system;
 
 pub fn make_tick_schedule() -> Schedule {
     Schedule::builder()
+        .flush()
         .add_system(change_tile_system::process_tile_changes_system())
         .flush()
         .add_system(launch_wave_system::process_wave_launch_system())
@@ -20,6 +21,7 @@ pub fn make_tick_schedule() -> Schedule {
         .add_system(mob_movement_system::move_mobs_system())
         .flush()
         .add_system(mob_core_system::mob_core_hits_system())
+        .flush()
         .build()
 }
 

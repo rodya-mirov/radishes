@@ -20,9 +20,6 @@ Next feature set:
 	set 3c:
 		health loss can occur
 
-    set 3d:
-		if health <= 0, some kind of death condition (design TBA; better than "crash the game")
-
 	set 4a:
 		spike traps can be built in exchange for resources
 		traps exist in space; appear in infopane
@@ -31,3 +28,9 @@ Next feature set:
 		every tick that monsters are on a spike trap, they take damage
 		if a monster's health goes to zero, they die
 		if a monster dies, player gets some kind of resource
+
+    set 5a:
+        some kind of game state changer -- a default state, a new game button, td only appears when you hit it
+
+    set 5b:
+		if health <= 0, some kind of death condition that eventually sends you back to the new game situation

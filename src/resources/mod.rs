@@ -140,3 +140,10 @@ impl TileTransforms {
         self.map.get(&source).cloned().unwrap_or_else(|| Default::default())
     }
 }
+
+/// Indicator of what total state the game is in
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub enum GameState {
+    Opening,
+    MainGame,
+}

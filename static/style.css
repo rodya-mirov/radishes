@@ -3,25 +3,45 @@
     height: 100%;
     width: 60%;
     display: flex;
+
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 5px;
+    padding: 5px;
+
+    font-size: 0;
 }
 
-/* All the stuff goes in here */
-.info-pane-main-div {
+.new-game-menu {
+    margin: auto;
     height: 100%;
-    width: 20%;
+    width: 60%;
+
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 5px;
+    padding: 5px;
+
+    font-size: 1em;
 }
 
-.launch-wave-div {
+.new-game-button {
+    background-color: cornflowerblue;
+
     border-width: 2px;
     border-style: solid;
     border-radius: 5px;
 
     padding: 10px;
-
-    font-size: 1em;
-
-    width: 100%;
+    margin: auto;
     border-color: black;
+}
+
+/* All the stuff goes in here */
+.info-pane-main-div {
+    width: 100%;
+
+    font-size: 16px;
 }
 
 .health-view {
@@ -33,10 +53,19 @@
 
     font-size: 1em;
 
-    width: 100%;
     border-color: black;
 
     background-color: darksalmon;
+}
+
+.launch-wave-div {
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 5px;
+
+    padding: 10px;
+
+    border-color: black;
 }
 
 .launch-wave-div-enabled {
@@ -50,6 +79,7 @@
 
 /* Child objects of info-pane-main-div */
 .info-pane {
+    margin: auto;
     border-width: 2px;
     border-style: solid;
     border-radius: 5px;
@@ -57,8 +87,6 @@
     padding: 10px;
 
     font-size: 1em;
-
-    width: 100%;
 }
 
 .change-tile-button {
