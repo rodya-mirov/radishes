@@ -1,5 +1,7 @@
 use yew::prelude::*;
 
+use legion::*;
+
 use crate::{resources::*, ECS};
 
 mod detail_view;
@@ -17,7 +19,10 @@ pub enum ModelMsg {}
 
 // TODO this probably shouldn't live here
 pub fn init_ecs(ecs: &ECS) {
-    ecs.with(|_world, r| {
+    ecs.with(|world, r| {
+        *r = Resources::default();
+        world.clear();
+
         r.insert(NextWaveState::default());
         r.insert(PlayerHealth::default());
 

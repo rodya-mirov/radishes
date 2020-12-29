@@ -146,4 +146,5 @@ impl TileTransforms {
 pub enum GameState {
     Opening,
     MainGame,
+    Died,
 }

@@ -61,11 +61,11 @@ impl Component for View {
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         let ecs = ECS::new();
 
+        game_view::init_ecs(&ecs);
+
         ecs.with(|_, r| {
             r.insert(resources::GameState::Opening);
         });
-
-        game_view::init_ecs(&ecs);
 
         let tick_cb = link.callback(|()| ViewMsg::Tick);
 
@@ -89,7 +89,7 @@ impl Component for View {
                 self.ecs.with(|world, resources| {
                     let should_run_tick = match *resources.get::<GameState>().unwrap() {
                         GameState::MainGame => true,
-                        GameState::Opening => false,
+                        GameState::Opening | GameState::Died => false,
                     };
 
                     if should_run_tick {
@@ -113,6 +113,7 @@ impl Component for View {
 
         match game_state {
             GameState::Opening => self.render_opening(),
+            GameState::Died => self.render_died(),
             GameState::MainGame => self.render_main_game(),
         }
     }
@@ -122,6 +123,12 @@ impl View {
     fn render_opening(&self) -> Html {
         html! {
             <new_game_view::NewGameView ecs=self.ecs.clone() />
+        }
+    }
+
+    fn render_died(&self) -> Html {
+        html! {
+            <new_game_view::DiedView ecs=self.ecs.clone() />
         }
     }
 

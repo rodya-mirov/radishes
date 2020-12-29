@@ -35,3 +35,23 @@ Next feature set:
 		a dijkstra map is maintained spawn -> core;
 			player is not allowed to build a blocker
 			useful message appears in the infopane if they try
+
+	set 3a:
+		monsters exist (prepopulated in init, static) and are rendered
+		just simple circles for now
+
+	set 3b:
+		exactly one spawn + core tile
+		monsters spawn at spawn point
+		monsters proceed to core
+
+	set 3c:
+		health loss can occur
+
+
+
+    set 5a:
+        some kind of game state changer -- a default state, a new game button, td only appears when you hit it
+
+    set 5b:
+		if health <= 0, some kind of death condition that eventually sends you back to the new game situation

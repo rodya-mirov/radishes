@@ -7,6 +7,10 @@ pub(crate) struct NewGameView {
     model: ECS,
 }
 
+pub(crate) struct DiedView {
+    model: ECS,
+}
+
 #[derive(Clone, Properties)]
 pub(crate) struct EcsProps {
     pub(crate) ecs: ECS,
@@ -47,6 +51,33 @@ impl Component for NewGameView {
     }
 }
 
+impl Component for DiedView {
+    type Message = NoMsg;
+    type Properties = EcsProps;
+
+    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
+        DiedView { model: props.ecs }
+    }
+
+    fn update(&mut self, msg: Self::Message) -> bool {
+        match msg {}
+    }
+
+    fn change(&mut self, props: Self::Properties) -> bool {
+        self.model = props.ecs;
+        true
+    }
+
+    fn view(&self) -> Html {
+        html! {
+            <div class="new-game-menu">
+                <div><p>{ "If your health drops below zero, you will lose the game. That's probably what happened to you. It's okay. It's probably okay." }</p></div>
+                <StartGameBtn ecs=self.model.clone() />
+            </div>
+        }
+    }
+}
+
 struct StartGameBtn {
     link: ComponentLink<Self>,
     model: ECS,
@@ -63,8 +94,9 @@ impl Component for StartGameBtn {
     fn update(&mut self, msg: Self::Message) -> bool {
         match msg {
             ClickMsg::Clicked => {
+                crate::game_view::init_ecs(&self.model);
                 self.model.with(|_, r| {
-                    *r.get_mut::<GameState>().unwrap() = GameState::MainGame;
+                    r.insert(GameState::MainGame);
                 });
                 true
             }
