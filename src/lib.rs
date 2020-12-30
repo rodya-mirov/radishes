@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use wasm_bindgen::prelude::*;
 use yew::{
     prelude::*,
@@ -5,6 +7,8 @@ use yew::{
 };
 
 use legion::Schedule;
+
+mod assets;
 
 pub use ecs_wrapper::ECS;
 
@@ -45,9 +49,15 @@ mod ecs_wrapper {
 struct View {
     ecs: ECS,
     schedule: Schedule,
+    assets: Arc<assets::Assets>,
 
     // We have to keep a reference to this; it keeps triggering until it's dropped
     _tick_handle: Box<dyn Task>,
+}
+
+#[derive(Properties, Clone)]
+struct ViewProps {
+    assets: Arc<assets::Assets>,
 }
 
 enum ViewMsg {
@@ -56,9 +66,9 @@ enum ViewMsg {
 
 impl Component for View {
     type Message = ViewMsg;
-    type Properties = ();
+    type Properties = ViewProps;
 
-    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let ecs = ECS::new();
 
         game_view::init_ecs(&ecs);
@@ -75,6 +85,7 @@ impl Component for View {
 
         Self {
             ecs,
+            assets: props.assets,
             _tick_handle: Box::new(tick_handle),
             schedule,
         }
@@ -134,14 +145,18 @@ impl View {
 
     fn render_main_game(&self) -> Html {
         html! {
-            <game_view::GameView ecs=self.ecs.clone() />
+            <game_view::GameView assets=self.assets.clone() ecs=self.ecs.clone() />
         }
     }
 }
 
 #[wasm_bindgen(start)]
-pub fn run_app() {
+pub async fn run_app() -> Result<(), JsValue> {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    App::<View>::new().mount_to_body();
+    let assets = assets::load_assets().await?;
+
+    App::<View>::new().mount_to_body_with_props(ViewProps { assets: Arc::new(assets) });
+
+    Ok(())
 }

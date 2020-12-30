@@ -556,6 +556,7 @@ dependencies = [
  "rand 0.8.0",
  "serde",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
  "web-sys",
  "yew",
 ]

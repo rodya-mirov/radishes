@@ -1,0 +1,57 @@
+Spike trap / caltrops:
+    Sits on the ground
+    Enemies take damage every unit of distance they pass through it
+    Flying enemies are immune
+
+    Tile availability:
+        x   Open
+        -   Wall, Spawn, Core
+
+Gas trap:
+    Hovers ambiently in the air (possibly in a pathing radius from an emanation)
+    Enemies take damage every tick they're in the gas
+
+    Tile availability (source):
+        x   Open
+        -   Wall, Spawn, Core
+
+    Spreads to Spawn and Core as well
+
+    --- Strategy note; caltrop total damage is unaffected by speed
+        but gas does less to fast mobs, and more to slow mobs. Also
+        the flying difference
+
+Pits:
+    New tile type, not passable
+    If a walking enemy is somehow on the pit, they fall in and die
+
+Fans:
+    Trap type, has a direction and a range
+    Each tick, applies a movement, inverse proportional to the mob's inertia (note flyers have low inertia)
+    Also blows gas around (???)
+    can be used to slow down enemies or, if they're light enough, push them into a pit
+
+Guns:
+    Stick it on a wall, it shoots enemies
+    Damage / shot and recharge time are the fiddly bits
+    One enemy per bullet
+
+    Note: aiming is a concern; does it fire randomly, does it shoot straight, does it lead, etc.
+
+Grenade launchers:
+    Like guns, but do AOE damage when the pellet hits
+
+Slow goop:
+    Trap type, on the ground
+    Enemies move more slowly across it
+
+Push traps:
+    trap type, has a direction
+    When it triggers, applies a movement, inverse proportional to the mob's inertia (note flyers have low inertia)
+
+    Higher movement delta than fans, but triggers only when an enemy is in range, and has a cooldown
+
+Harpoon traps:
+    Analogous to push traps, but pull toward the trap
+
+

@@ -1,5 +1,5 @@
-pub const TILE_WIDTH_PIXELS: i32 = 30;
-pub const TILE_HEIGHT_PIXELS: i32 = 30;
+pub const TILE_WIDTH_PIXELS: i32 = 32;
+pub const TILE_HEIGHT_PIXELS: i32 = 32;
 
 /// Given pixel coordinates x and y (already transformed to "world" pixels), transform them
 /// into a tile coordinate. Note that if it's too close to the border, it will return None, to avoid

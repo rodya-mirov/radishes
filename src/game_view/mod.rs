@@ -1,8 +1,10 @@
+use std::sync::Arc;
+
 use yew::prelude::*;
 
 use legion::*;
 
-use crate::{resources::*, ECS};
+use crate::{assets::Assets, resources::*, ECS};
 
 mod detail_view;
 mod health_view;
@@ -13,6 +15,7 @@ mod td_view;
 pub struct GameView {
     _link: ComponentLink<Self>,
     ecs: ECS,
+    assets: Arc<Assets>,
 }
 
 pub enum ModelMsg {}
@@ -87,6 +90,7 @@ pub fn init_ecs(ecs: &ECS) {
 #[derive(Properties, Clone)]
 pub struct GameProps {
     pub ecs: ECS,
+    pub assets: Arc<Assets>,
 }
 
 impl Component for GameView {
@@ -94,9 +98,11 @@ impl Component for GameView {
     type Properties = GameProps;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let ecs = props.ecs;
-
-        Self { ecs, _link: link }
+        Self {
+            ecs: props.ecs,
+            assets: props.assets,
+            _link: link,
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
@@ -112,7 +118,7 @@ impl Component for GameView {
         html! {
             <div id="game-div">
                 <div id="tower-defense-div">
-                    <td_view::TowerDefenseComponent ecs={self.ecs.clone()} />
+                    <td_view::TowerDefenseComponent assets={self.assets.clone()} ecs={self.ecs.clone()} />
                 </div>
                 <div class="info-pane-main-div">
                     <health_view::HealthView ecs={self.ecs.clone()} />
