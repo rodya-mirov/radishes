@@ -53,6 +53,10 @@ fn launch_wave(cmd: &mut CommandBuffer, spawns: &[(i32, i32)]) -> usize {
                 },
             },
             Renderable::Circle { radius: 10 },
+            MobHealth(100),
+            OnDeath {
+                events: vec![DeathEvent::GetResources(OwnedResource::Money, 5)],
+            },
             Hidden,
         ));
 

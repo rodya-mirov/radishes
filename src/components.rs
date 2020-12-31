@@ -31,6 +31,26 @@ pub struct Position {
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct TdMob;
 
+/// Component indicating the entity has health. Probably they can take damage and if the health
+/// goes to zero, they'll die.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct MobHealth(pub i32);
+
+/// Tag component indicating the entity has died and should be deleted and their death events handled properly
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct Died;
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct OnDeath {
+    // TODO: smallvec almost everywhere
+    pub events: Vec<DeathEvent>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum DeathEvent {
+    GetResources(OwnedResource, i64),
+}
+
 /// Indication of how a positional object should be rendered
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Renderable {

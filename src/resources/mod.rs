@@ -90,6 +90,10 @@ impl OwnedResources {
             *self.0.entry(*o).or_insert(0) -= other_amt;
         }
     }
+
+    pub fn receive(&mut self, kind: OwnedResource, amount: i64) {
+        *self.0.entry(kind).or_insert(0) += amount;
+    }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq)]

@@ -9,7 +9,7 @@ use wasm_bindgen::JsValue;
 use web_sys::{KeyboardEvent, MouseEvent};
 
 use crate::{
-    assets::{Assets, ImageBitmapExt},
+    assets::Assets,
     canvas_util::with_canvas,
     resources::*,
     tile_helpers::{coords_to_tile_buffered, TILE_HEIGHT_PIXELS, TILE_WIDTH_PIXELS},
@@ -19,6 +19,8 @@ use crate::{
 pub(crate) struct TowerDefenseComponent {
     link: ComponentLink<Self>,
     ecs: ECS,
+    // TODO: at some point use images for tiles
+    #[allow(unused)]
     assets: Arc<Assets>,
 }
 
@@ -137,33 +139,8 @@ impl TowerDefenseComponent {
                             TILE_WIDTH_PIXELS as f64 - 1.,
                             TILE_HEIGHT_PIXELS as f64 - 1.,
                         );
-
-                        self.assets
-                            .gas_image
-                            .render_to_canvas_tile(&canvas_state.context, 0, 0, x_left_pixel, y_top_pixel)
-                            .expect("Image should render");
                     }
                 }
-
-                canvas_state
-                    .context
-                    // lol
-                    .draw_image_with_image_bitmap_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
-                        &self.assets.as_ref().gas_image,
-                        // offset within the image; useful for spritesheets, etc.
-                        0.,
-                        0.,
-                        // dimensions of the image subrect (width and height)
-                        TILE_WIDTH_PIXELS as f64,
-                        TILE_HEIGHT_PIXELS as f64,
-                        // offset on the canvas; useful for placing it at a particular place
-                        x_pixel_offset as f64 + TILE_WIDTH_PIXELS as f64,
-                        y_pixel_offset as f64 + TILE_HEIGHT_PIXELS as f64,
-                        // rendered size; important to leave this unchanged
-                        TILE_WIDTH_PIXELS as f64,
-                        TILE_HEIGHT_PIXELS as f64,
-                    )
-                    .expect("Image should be drawable");
             });
 
             self.ecs.with(|world, resources| {
