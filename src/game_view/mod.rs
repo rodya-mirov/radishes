@@ -32,6 +32,7 @@ pub fn init_ecs(ecs: &ECS) {
             Position::at_tile_center(4, 2),
         ));
 
+        r.insert(KeysPressed::default());
         r.insert(NextWaveState::default());
         r.insert(PlayerHealth::default());
 

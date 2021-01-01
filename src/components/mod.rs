@@ -2,20 +2,9 @@ use legion::*;
 
 use crate::resources::*;
 
-/// Message component; the user has attempted to initiate a tile change
-/// TODO: should this be a resource instead? Maybe it makes more sense to just have a Queue of these things
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct TryChangeTileType {
-    pub x: i32,
-    pub y: i32,
-    pub desired: Tile,
-    pub costs: OwnedResources,
-}
+mod user_input;
 
-/// Message component; the user has attempted to initiate a new wave
-/// TODO: should this be a resource instead? Maybe it makes more sense to just have a Queue of these things
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct TryLaunchWave;
+pub use user_input::*;
 
 /// Indicates the entity has touched the core.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]

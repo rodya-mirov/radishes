@@ -6,6 +6,14 @@ mod map;
 
 pub use map::*;
 
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Default)]
+pub struct KeysPressed {
+    pub down: bool,
+    pub up: bool,
+    pub left: bool,
+    pub right: bool,
+}
+
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum TdTileSelect {
     None,

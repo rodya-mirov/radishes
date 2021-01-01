@@ -1,5 +1,4 @@
 - Keyboard focus shouldn't matter; top-level key interceptor for shortcuts
-- Keydown/keyup navigation would be a lot nicer
 
 - Dragon drop interaction with the map would be nice
 - Mouse wheel zoom for the map would be nice

@@ -8,7 +8,7 @@ use yew::prelude::*;
 use wasm_bindgen::JsValue;
 use web_sys::{KeyboardEvent, MouseEvent};
 
-use crate::{assets::Assets, canvas_util::with_canvas, resources::*, tile_helpers::coords_to_tile_buffered, ECS};
+use crate::{assets::Assets, canvas_util::with_canvas, components::*, resources::*, tile_helpers::coords_to_tile_buffered, ECS};
 
 pub(crate) struct TowerDefenseComponent {
     link: ComponentLink<Self>,
@@ -22,7 +22,9 @@ pub(crate) struct TowerDefenseComponent {
 pub(crate) enum TDMessage {
     ClickedPixel { x: i32, y: i32 },
     Cancel,
-    ArrowKeyDown(ArrowKey),
+    KeyUp(ArrowKey),
+    KeyDown(ArrowKey),
+    FocusLost,
     // callbacks can't conditionally return things, so we need an "actually nevermind"
     Nothing,
 }
@@ -65,9 +67,6 @@ pub(crate) struct TDProps {
     pub(crate) assets: Arc<Assets>,
 }
 
-// TODO: probably make this configurable?
-const KEYBOARD_MOVE_SPEED: i32 = 10;
-
 impl Component for TowerDefenseComponent {
     type Message = TDMessage;
     type Properties = TDProps;
@@ -89,6 +88,7 @@ impl Component for TowerDefenseComponent {
                     (camera.left, camera.top)
                 });
 
+                // TODO: probably make this a component and handle it with a system
                 if let Some((tile_x, tile_y)) = coords_to_tile_buffered(x + left, y + top, 2) {
                     self.ecs.with(|_, r| {
                         *r.get_mut_or_default::<TdTileSelect>() = TdTileSelect::Selected { x: tile_x, y: tile_y };
@@ -96,22 +96,30 @@ impl Component for TowerDefenseComponent {
                 }
             }
             TDMessage::Cancel => {
+                // TODO: probably make this a component and handle it with a system
                 self.ecs.with(|_, r| {
                     *r.get_mut_or_default::<TdTileSelect>() = TdTileSelect::None;
                 });
             }
-            TDMessage::ArrowKeyDown(arrow_key) => {
-                let (dx, dy) = match arrow_key {
-                    ArrowKey::Down => (0, 1),
-                    ArrowKey::Up => (0, -1),
-                    ArrowKey::Left => (-1, 0),
-                    ArrowKey::Right => (1, 0),
-                };
-
-                self.ecs.with(|_, r| {
-                    let mut camera = r.get_mut::<TdCamera>().unwrap();
-                    camera.top += dy * KEYBOARD_MOVE_SPEED;
-                    camera.left += dx * KEYBOARD_MOVE_SPEED;
+            TDMessage::KeyDown(arrow_key) => {
+                self.ecs.with(|w, _| match arrow_key {
+                    ArrowKey::Down => w.push((UserKeyEvent::KeyDown(UserKey::Down),)),
+                    ArrowKey::Left => w.push((UserKeyEvent::KeyDown(UserKey::Left),)),
+                    ArrowKey::Right => w.push((UserKeyEvent::KeyDown(UserKey::Right),)),
+                    ArrowKey::Up => w.push((UserKeyEvent::KeyDown(UserKey::Up),)),
+                });
+            }
+            TDMessage::KeyUp(arrow_key) => {
+                self.ecs.with(|w, _| match arrow_key {
+                    ArrowKey::Down => w.push((UserKeyEvent::KeyUp(UserKey::Down),)),
+                    ArrowKey::Left => w.push((UserKeyEvent::KeyUp(UserKey::Left),)),
+                    ArrowKey::Right => w.push((UserKeyEvent::KeyUp(UserKey::Right),)),
+                    ArrowKey::Up => w.push((UserKeyEvent::KeyUp(UserKey::Up),)),
+                });
+            }
+            TDMessage::FocusLost => {
+                self.ecs.with(|w, _| {
+                    w.push((UserKeyEvent::AllKeysUp,));
                 });
             }
         }
@@ -149,16 +157,27 @@ impl Component for TowerDefenseComponent {
         });
 
         let kd_cb = self.link.callback(|e: KeyboardEvent| match e.code().as_str() {
-            "ArrowDown" | "KeyS" => TDMessage::ArrowKeyDown(ArrowKey::Down),
-            "ArrowUp" | "KeyW" => TDMessage::ArrowKeyDown(ArrowKey::Up),
-            "ArrowLeft" | "KeyA" => TDMessage::ArrowKeyDown(ArrowKey::Left),
-            "ArrowRight" | "KeyD" => TDMessage::ArrowKeyDown(ArrowKey::Right),
+            "ArrowDown" | "KeyS" => TDMessage::KeyDown(ArrowKey::Down),
+            "ArrowUp" | "KeyW" => TDMessage::KeyDown(ArrowKey::Up),
+            "ArrowLeft" | "KeyA" => TDMessage::KeyDown(ArrowKey::Left),
+            "ArrowRight" | "KeyD" => TDMessage::KeyDown(ArrowKey::Right),
             "Escape" => TDMessage::Cancel,
             _ => TDMessage::Nothing,
         });
 
+        let ku_cb = self.link.callback(|e: KeyboardEvent| match e.code().as_str() {
+            "ArrowDown" | "KeyS" => TDMessage::KeyUp(ArrowKey::Down),
+            "ArrowUp" | "KeyW" => TDMessage::KeyUp(ArrowKey::Up),
+            "ArrowLeft" | "KeyA" => TDMessage::KeyUp(ArrowKey::Left),
+            "ArrowRight" | "KeyD" => TDMessage::KeyUp(ArrowKey::Right),
+            "Escape" => TDMessage::Cancel,
+            _ => TDMessage::Nothing,
+        });
+
+        let focus_lost_cb = self.link.callback(|_| TDMessage::FocusLost);
+
         html! {
-            <canvas id="td-canvas" tabIndex=1 onclick=click_cb onmousemove=hover_cb onkeydown=kd_cb />
+            <canvas id="td-canvas" tabIndex=1 onclick=click_cb onmousemove=hover_cb onkeydown=kd_cb onkeyup=ku_cb onblur=focus_lost_cb />
         }
     }
 

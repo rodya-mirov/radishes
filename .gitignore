@@ -3,8 +3,6 @@
 /.vscode
 
 # Some build artifacts we don't want to store in source control
-/static/package.json
-/static/wasm.d.ts
+/pkg
 /static/wasm.js
 /static/wasm_bg.wasm
-/static/wasm_bg.wasm.d.ts
