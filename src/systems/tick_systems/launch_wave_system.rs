@@ -52,8 +52,12 @@ fn launch_wave(cmd: &mut CommandBuffer, spawns: &[(i32, i32)]) -> usize {
                     ticks_remaining: delay_ticks,
                 },
             },
-            Renderable::Circle { radius: 10 },
-            MobHealth(100),
+            Renderable::Geometry(RenderGeometry::Circle { radius: 10 }),
+            MobHealth {
+                current_health: 100,
+                max_health: 100,
+            },
+            Breathes,
             OnDeath {
                 events: vec![DeathEvent::GetResources(OwnedResource::Money, 5)],
             },

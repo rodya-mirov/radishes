@@ -28,7 +28,8 @@ pub(super) fn move_mobs(#[resource] map: &mut Map, cmd: &mut CommandBuffer, worl
         // at the moment, the position is the center of the mob, and is used to compute which tile
         // they're on, for the purpose of pathing. They figure out their goal tile and move toward
         // the center of it.
-        if let Some((tile_x, tile_y)) = coords_to_tile(pos.x, pos.y) {
+        {
+            let (tile_x, tile_y) = coords_to_tile(pos.x, pos.y);
             let (next_x, next_y) = map.move_toward_spawn(tile_x, tile_y);
             let (next_x, next_y) = tile_to_pixel_coords(next_x, next_y);
 
@@ -42,7 +43,9 @@ pub(super) fn move_mobs(#[resource] map: &mut Map, cmd: &mut CommandBuffer, worl
         }
 
         // If they're now in the core
-        if let Some((tile_x, tile_y)) = coords_to_tile(pos.x, pos.y) {
+        // TODO: probably this should be in the core hits system
+        {
+            let (tile_x, tile_y) = coords_to_tile(pos.x, pos.y);
             match map.get_tile(tile_x, tile_y) {
                 Tile::Core => cmd.add_component(*entity, TouchedCore),
                 _ => {}

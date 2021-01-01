@@ -8,13 +8,7 @@ use yew::prelude::*;
 use wasm_bindgen::JsValue;
 use web_sys::{KeyboardEvent, MouseEvent};
 
-use crate::{
-    assets::Assets,
-    canvas_util::with_canvas,
-    resources::*,
-    tile_helpers::{coords_to_tile_buffered, TILE_HEIGHT_PIXELS, TILE_WIDTH_PIXELS},
-    ECS,
-};
+use crate::{assets::Assets, canvas_util::with_canvas, resources::*, tile_helpers::coords_to_tile_buffered, ECS};
 
 pub(crate) struct TowerDefenseComponent {
     link: ComponentLink<Self>,
@@ -41,16 +35,6 @@ pub(crate) enum ArrowKey {
     Up,
 }
 
-fn div_round_up(amt: i32, div: i32) -> i32 {
-    let r = amt.rem_euclid(div);
-    let d = amt.div_euclid(div);
-    if r > 0 {
-        d + 1
-    } else {
-        d
-    }
-}
-
 impl TowerDefenseComponent {
     fn draw_canvas(&self) {
         with_canvas(|canvas_state| {
@@ -68,83 +52,8 @@ impl TowerDefenseComponent {
                 canvas_state.canvas.height() as f64 + 2.,
             );
 
-            let canvas_width: i32 = canvas_state.bounding_rect.width() as i32;
-            let canvas_height: i32 = canvas_state.bounding_rect.height() as i32;
-
-            self.ecs.with(|_, resources| {
-                let hover_state: TdTileSelect = *(resources.get_or_default());
-                let map = resources.get::<Map>().unwrap();
-                let camera = resources.get::<TdCamera>().unwrap();
-
-                // start rendering here for the left column of tiles; this may be negative
-                let x_pixel_offset = -(camera.left.rem_euclid(TILE_WIDTH_PIXELS));
-                let x_min_pixel = camera.left + x_pixel_offset;
-                let x_min_tile = x_min_pixel / TILE_WIDTH_PIXELS;
-                let num_tiles_wide = div_round_up(canvas_width - x_pixel_offset, TILE_WIDTH_PIXELS);
-
-                let y_pixel_offset = -(camera.top.rem_euclid(TILE_HEIGHT_PIXELS));
-                let y_min_pixel = camera.top + y_pixel_offset;
-                let y_min_tile = y_min_pixel / TILE_HEIGHT_PIXELS;
-                let num_tiles_tall = div_round_up(canvas_height - y_pixel_offset, TILE_HEIGHT_PIXELS);
-
-                let black = JsValue::from("#000000");
-                let highlighted = JsValue::from("#DCFB3E");
-
-                for x_ind in 0..num_tiles_wide + 1 {
-                    let tile_x = x_min_tile + x_ind;
-                    for y_ind in 0..num_tiles_tall + 1 {
-                        let tile_y = y_min_tile + y_ind;
-
-                        let x_left_pixel = x_pixel_offset + (x_ind * TILE_WIDTH_PIXELS);
-                        let y_top_pixel = y_pixel_offset + (y_ind * TILE_HEIGHT_PIXELS);
-
-                        let tile: Tile = map.get_tile(tile_x, tile_y);
-
-                        let color = match tile {
-                            Tile::Open => JsValue::from("#70e0e0"),
-                            Tile::Wall => JsValue::from("#008050"),
-                            Tile::Spawn => JsValue::from("#ff1587"),
-                            Tile::Core => JsValue::from("#1584ff"),
-                        };
-
-                        canvas_state.context.set_fill_style(&color);
-
-                        canvas_state.context.fill_rect(
-                            x_left_pixel as f64,
-                            y_top_pixel as f64,
-                            TILE_WIDTH_PIXELS as f64,
-                            TILE_HEIGHT_PIXELS as f64,
-                        );
-                    }
-                }
-
-                for x_ind in 0..num_tiles_wide + 1 {
-                    let tile_x = x_min_tile + x_ind;
-
-                    for y_ind in 0..num_tiles_tall + 1 {
-                        let tile_y = y_min_tile + y_ind;
-
-                        let x_left_pixel = x_pixel_offset + (x_ind * TILE_WIDTH_PIXELS);
-                        let y_top_pixel = y_pixel_offset + (y_ind * TILE_HEIGHT_PIXELS);
-
-                        if hover_state == (TdTileSelect::Selected { x: tile_x, y: tile_y }) {
-                            canvas_state.context.set_stroke_style(&highlighted);
-                        } else {
-                            canvas_state.context.set_stroke_style(&black);
-                        }
-
-                        canvas_state.context.stroke_rect(
-                            x_left_pixel as f64 + 0.5,
-                            y_top_pixel as f64 + 0.5,
-                            TILE_WIDTH_PIXELS as f64 - 1.,
-                            TILE_HEIGHT_PIXELS as f64 - 1.,
-                        );
-                    }
-                }
-            });
-
             self.ecs.with(|world, resources| {
-                crate::systems::canvas_render_schedule(canvas_state.clone()).execute(world, resources);
+                crate::systems::canvas_render_schedule(&canvas_state, &self.assets).execute(world, resources);
             });
         });
     }

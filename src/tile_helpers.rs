@@ -15,12 +15,12 @@ pub fn coords_to_tile_buffered(x: i32, y: i32, border_offset: i32) -> Option<(i3
     Some((tile_x, tile_y))
 }
 
-pub fn coords_to_tile(x: i32, y: i32) -> Option<(i32, i32)> {
-    let tile_x = safe_div(x, TILE_WIDTH_PIXELS, 0)?;
+pub fn coords_to_tile(x: i32, y: i32) -> (i32, i32) {
+    let tile_x = safe_div(x, TILE_WIDTH_PIXELS, 0).expect("Safe div is guaranteed to return");
 
-    let tile_y = safe_div(y, TILE_HEIGHT_PIXELS, 0)?;
+    let tile_y = safe_div(y, TILE_HEIGHT_PIXELS, 0).expect("Safe div is guaranteed to return");
 
-    Some((tile_x, tile_y))
+    (tile_x, tile_y)
 }
 
 /// Transforms tile coordinates to pixel coordinates which are in the center of the tile

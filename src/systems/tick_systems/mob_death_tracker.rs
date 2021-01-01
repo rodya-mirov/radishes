@@ -17,7 +17,7 @@ pub(super) fn mobs_die_at_no_health(cmd: &mut CommandBuffer, world: &mut SubWorl
             continue;
         }
 
-        if mob_health.0 <= 0 {
+        if mob_health.current_health <= 0 {
             cmd.add_component(*entity, Died);
         }
     }

@@ -15,12 +15,32 @@ pub enum Tile {
 
 const DEFAULT_TILE: Tile = Tile::Wall;
 
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+struct GasFlow;
+
+trait PassableChecker {
+    fn is_passable(&self, tile: Tile) -> bool;
+}
+
+impl PassableChecker for GasFlow {
+    fn is_passable(&self, tile: Tile) -> bool {
+        match tile {
+            Tile::Open => true,
+            Tile::Wall => false,
+            Tile::Spawn => false,
+            Tile::Core => false,
+        }
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct Map {
     map: HashMap<(i32, i32), Tile>,
 
     dijkstra_maps_dirty: bool,
     core_paths: DijkstraMap,
+
+    poison_gas_map: FlowMap<GasFlow>,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug)]
@@ -100,7 +120,20 @@ impl Map {
             map: HashMap::new(),
             dijkstra_maps_dirty: false,
             core_paths: DijkstraMap::new(),
+            poison_gas_map: FlowMap::new(GasFlow, 6, 1),
         }
+    }
+
+    pub fn tick_gas_map(&mut self) {
+        self.poison_gas_map.tick(&self.map, DEFAULT_TILE);
+    }
+
+    pub fn add_gas_to_tile(&mut self, tile_x: i32, tile_y: i32, amount: i32) {
+        self.poison_gas_map.add_amount(tile_x, tile_y, amount)
+    }
+
+    pub fn get_gas_amount(&self, tile_x: i32, tile_y: i32) -> i32 {
+        self.poison_gas_map.amounts.get(&(tile_x, tile_y)).copied().unwrap_or(0)
     }
 
     pub fn get_tile(&self, x: i32, y: i32) -> Tile {
@@ -183,4 +216,99 @@ impl Tile {
 
 fn neighbors(x: i32, y: i32) -> [(i32, i32); 4] {
     [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct FlowMap<P: PassableChecker + Clone + 'static> {
+    amounts: HashMap<(i32, i32), i32>,
+    tile_checker: P,
+    // i32 for simplicity but should be nonnegative
+    // this is the amount of fluid that can flow out of any particular square per tick
+    fluidity: i32,
+    // i32 for simplicity but should be nonnegative
+    // this is the amount that is deleted from each square, each tick (before flow)
+    // note that if this is zero, but there is a source somewhere, the map will eventually flood
+    dispersal: i32,
+}
+
+impl<P: PassableChecker + Clone + 'static> FlowMap<P> {
+    pub fn new(tile_checker: P, fluidity: i32, dispersal: i32) -> FlowMap<P> {
+        Self {
+            amounts: HashMap::new(),
+            tile_checker,
+            fluidity,
+            dispersal,
+        }
+    }
+
+    pub fn tick(&mut self, tiles: &HashMap<(i32, i32), Tile>, default_tile: Tile) {
+        self.disperse();
+        self.flow(tiles, default_tile);
+        self.cleanup();
+    }
+
+    fn disperse(&mut self) {
+        let dispersal = self.dispersal;
+
+        self.amounts.values_mut().for_each(|amt| {
+            *amt = (*amt - dispersal).max(0);
+        });
+
+        self.cleanup();
+    }
+
+    /// Most complex part; each tile has an amount on it, and a fluidity
+    /// Basically any tile that has any remaining fluidity can shift a gas unit to a
+    /// tile which has fewer gas units
+    fn flow(&mut self, tiles: &HashMap<(i32, i32), Tile>, default_tile: Tile) {
+        let mut flow_from: Vec<(i32, i32)> = tiles.keys().copied().collect();
+        // We have to sort because this sloppy algorithm is not commutative (because we don't iterate)
+        // and we don't want to like, refresh the page and now the player's gas traps have different coverage
+        flow_from.sort();
+
+        // In whatever order we have these tiles in, just
+        for (tile_x, tile_y) in flow_from {
+            let mut neighbors: Vec<(i32, i32)> = neighbors(tile_x, tile_y)
+                .iter()
+                .copied()
+                .filter(|(x, y)| {
+                    let this_tile = tiles.get(&(*x, *y)).copied().unwrap_or(default_tile);
+                    self.tile_checker.is_passable(this_tile)
+                })
+                .collect();
+
+            let mut remaining_fluidity = self.fluidity;
+            let mut neighbor_index = 0;
+            let mut self_amount = self.amounts.get(&(tile_x, tile_y)).copied().unwrap_or(0);
+
+            while remaining_fluidity > 0 && !neighbors.is_empty() && self_amount > 1 {
+                neighbor_index = neighbor_index % neighbors.len();
+
+                let (nx, ny) = neighbors[neighbor_index];
+
+                let neighbor = self.amounts.entry((nx, ny)).or_insert(0);
+
+                if *neighbor + 1 < self_amount {
+                    self_amount -= 1;
+                    remaining_fluidity -= 1;
+                    *neighbor += 1;
+                    neighbor_index += 1;
+                } else {
+                    neighbors.remove(neighbor_index);
+                }
+            }
+
+            self.amounts.insert((tile_x, tile_y), self_amount);
+        }
+    }
+
+    /// Delete unused squares to save space
+    fn cleanup(&mut self) {
+        self.amounts.retain(|_, amt| *amt != 0)
+    }
+
+    pub fn add_amount(&mut self, tile_x: i32, tile_y: i32, to_add: i32) {
+        let amount = self.amounts.entry((tile_x, tile_y)).or_insert(0);
+        *amount = (*amount).saturating_add(to_add);
+    }
 }

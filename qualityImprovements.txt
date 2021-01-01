@@ -4,9 +4,12 @@
 - Drag'n'drop interaction with the map would be nice
 
 - Monsters using images instead of circles would be nice
+- Monster health indicator would be nice
+
 - Tiles using images instead of boxes would be nice
 
 - Some kind of particle effect when a monster dies
+- Some kind of particle effect when a monster takes damage
 
 - Somehow preventing monsters from completely coinciding would be nice
     Not sure what's to be done about this

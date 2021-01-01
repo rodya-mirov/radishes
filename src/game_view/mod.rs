@@ -4,7 +4,7 @@ use yew::prelude::*;
 
 use legion::*;
 
-use crate::{assets::Assets, resources::*, ECS};
+use crate::{assets::Assets, components::*, resources::*, ECS};
 
 mod detail_view;
 mod health_view;
@@ -25,6 +25,12 @@ pub fn init_ecs(ecs: &ECS) {
     ecs.with(|world, r| {
         *r = Resources::default();
         world.clear();
+
+        world.push((
+            PoisonGasTrap { amount: 10 },
+            crate::components::Renderable::Geometry(RenderGeometry::Circle { radius: 3 }),
+            Position::at_tile_center(4, 2),
+        ));
 
         r.insert(NextWaveState::default());
         r.insert(PlayerHealth::default());
