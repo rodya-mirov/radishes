@@ -9,7 +9,7 @@ mod launch_wave_system;
 
 // "every tick" systems
 mod breathe_gas_system; // breathers should take damage if they're near / on gas
-mod camera_move_system; // TODO: fill out and use
+mod camera_move_system; // move the camera in line with the key state
 mod death_cleanup; // delete all mobs which have an associated death component
 mod death_handler; // process on-death events for all dead things
 mod gas_dispersal; // gas should spread out

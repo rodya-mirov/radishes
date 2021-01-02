@@ -1,7 +1,10 @@
 - Keyboard focus shouldn't matter; top-level key interceptor for shortcuts
+- Make tile mod div collapsible
+- Make trap builder div collapsible
 
 - Dragon drop interaction with the map would be nice
 - Mouse wheel zoom for the map would be nice
+- Re-rendering everything every frame is janky
 
 - Monsters using images instead of circles would be nice
 

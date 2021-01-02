@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use serde::Deserialize;
 
@@ -12,6 +12,25 @@ pub struct KeysPressed {
     pub up: bool,
     pub left: bool,
     pub right: bool,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
+pub struct MenuCollapseStates {
+    collapsed: HashSet<String>,
+}
+
+impl MenuCollapseStates {
+    pub fn is_collapsed(&self, key: &str) -> bool {
+        self.collapsed.contains(key)
+    }
+
+    pub fn set_collapsed(&mut self, key: String, new_state: bool) {
+        if new_state {
+            self.collapsed.insert(key.into());
+        } else {
+            self.collapsed.remove(&key);
+        }
+    }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]

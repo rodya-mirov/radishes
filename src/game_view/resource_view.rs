@@ -55,7 +55,7 @@ impl Component for ResourceView {
         });
 
         html! {
-            <div class="info-pane">
+            <div>
                 { list }
             </div>
         }
