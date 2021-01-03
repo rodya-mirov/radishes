@@ -4,7 +4,7 @@ use yew::prelude::*;
 
 use legion::*;
 
-use crate::{assets::Assets, components::*, resources::*, ECS};
+use crate::{assets::Assets, resources::*, ECS};
 
 mod collapsible_div;
 
@@ -28,16 +28,11 @@ pub fn init_ecs(ecs: &ECS) {
         *r = Resources::default();
         world.clear();
 
-        world.push((
-            PoisonGasTrap { amount: 10 },
-            crate::components::Renderable::Geometry(RenderGeometry::Circle { radius: 3 }),
-            Position::at_tile_center(4, 2),
-        ));
-
         r.insert(KeysPressed::default());
         r.insert(NextWaveState::default());
         r.insert(PlayerHealth::default());
         r.insert(MenuCollapseStates::default());
+        r.insert(TdTileSelect::None);
 
         r.insert(OwnedResources::new().with(OwnedResource::Money, 50).with(OwnedResource::Wood, 20));
 
@@ -94,6 +89,15 @@ pub fn init_ecs(ecs: &ECS) {
         });
 
         r.insert(transforms);
+
+        let mut builds = StructureBuilds::new();
+        builds.add(StructureBuildDesc {
+            tile: Tile::Open,
+            kind: StructureKind::GasTrap,
+            cost: OwnedResources::new().with(OwnedResource::Money, 10).with(OwnedResource::Wood, 5),
+        });
+
+        r.insert(builds);
     })
 }
 
@@ -134,7 +138,7 @@ impl Component for GameView {
                     <health_view::HealthView ecs={self.ecs.clone()} />
                     <launch_wave_view::LaunchWaveView ecs={self.ecs.clone()} />
                     { self.resource_view() }
-                    <detail_view::DetailView ecs={self.ecs.clone()} />
+                    { self.detail_view() }
                 </div>
             </div>
         }
@@ -144,16 +148,35 @@ impl Component for GameView {
 impl GameView {
     fn resource_view(&self) -> Html {
         use collapsible_div::*;
-        use resource_view::*;
 
         html! {
             <Collapsible
                 ecs=self.ecs.clone(),
-                collapse_name="Resources".to_string(),
+                collapse_name="Resources",
                 title="Resources".to_string(),
             >
-                <ResourceView ecs={self.ecs.clone()} />
+                <resource_view::ResourceView ecs={self.ecs.clone()} />
             </Collapsible>
+        }
+    }
+
+    fn detail_view(&self) -> Html {
+        use collapsible_div::*;
+
+        let should_show = self.ecs.with(|_, r| r.get_or_default::<TdTileSelect>().is_selected());
+
+        if should_show {
+            html! {
+                <Collapsible
+                    ecs=self.ecs.clone(),
+                    collapse_name="TileDetails",
+                    title="Tile Details".to_string(),
+                >
+                    <detail_view::DetailView ecs={self.ecs.clone()} />
+                </Collapsible>
+            }
+        } else {
+            html! {}
         }
     }
 }

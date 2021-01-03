@@ -15,6 +15,7 @@ pub(crate) struct LaunchWaveProps {
 #[derive(Clone)]
 pub(crate) enum LaunchWaveMessage {
     Clicked,
+    AutoToggled,
 }
 
 impl Component for LaunchWaveView {
@@ -30,6 +31,11 @@ impl Component for LaunchWaveView {
             LaunchWaveMessage::Clicked => {
                 self.model.with(|world, _| {
                     world.push((TryLaunchWave,));
+                });
+            }
+            LaunchWaveMessage::AutoToggled => {
+                self.model.with(|world, _| {
+                    world.push((ToggleAutoLaunchWave,));
                 });
             }
         }
@@ -60,9 +66,18 @@ impl Component for LaunchWaveView {
             text = format!("{} (wait {})", text, next.delay_ticks);
         }
 
+        let img_link = if next.auto_launch {
+            "/assets/images/pause-auto-wave.png"
+        } else {
+            "/assets/images/auto-launch-wave.png"
+        };
+
+        let toggle_cb = self.link.callback(|_: MouseEvent| LaunchWaveMessage::AutoToggled);
+
         html! {
             <div class=style_class onclick=click_cb>
-                { text }
+                <img class="vert-center" src=img_link onclick=toggle_cb />
+                <div class="vert-center">{ text }</div>
             </div>
         }
     }

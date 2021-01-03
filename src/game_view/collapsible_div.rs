@@ -5,7 +5,7 @@ use crate::ECS;
 
 pub struct Collapsible {
     ecs: ECS,
-    collapse_name: String,
+    collapse_name: &'static str,
     title: String,
     children: Children,
 
@@ -19,7 +19,7 @@ pub enum Message {
 #[derive(Properties, Clone)]
 pub struct CollapsibleProperties {
     pub ecs: ECS,
-    pub collapse_name: String,
+    pub collapse_name: &'static str,
     pub title: String,
     pub children: Children,
 }
@@ -93,7 +93,6 @@ impl Collapsible {
             "collapse-button collapse-button-expanded"
         };
 
-        // TODO styling
         html! {
             <div class=class onclick=cb>{text}</div>
         }

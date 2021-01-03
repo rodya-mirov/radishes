@@ -1,11 +1,8 @@
-use std::sync::Arc;
-
 use legion::*;
 
 use wasm_bindgen::JsValue;
 
 use crate::{
-    assets::Assets,
     canvas_util::CanvasState,
     resources::*,
     tile_helpers::{TILE_HEIGHT_PIXELS, TILE_WIDTH_PIXELS},
@@ -16,10 +13,6 @@ use super::map_render_helpers::{get_map_render_data, MapRenderData};
 #[system]
 pub(super) fn draw_map_tiles(
     #[state] canvas_state: &mut CanvasState,
-    // TODO: use bitmaps for tiles at some point
-    #[allow(unused)]
-    #[state]
-    assets: &mut Arc<Assets>,
     #[resource] camera: &TdCamera,
     #[resource] map: &Map,
     #[resource] hover_state: &TdTileSelect,
@@ -73,10 +66,11 @@ pub(super) fn draw_map_tiles(
             let x_left_pixel = x_pixel_offset + (x_ind * TILE_WIDTH_PIXELS);
             let y_top_pixel = y_pixel_offset + (y_ind * TILE_HEIGHT_PIXELS);
 
-            if *hover_state == (TdTileSelect::Selected { x: tile_x, y: tile_y }) {
-                canvas_state.context.set_stroke_style(&highlighted);
-            } else {
-                canvas_state.context.set_stroke_style(&black);
+            match hover_state {
+                TdTileSelect::Selected { x, y, structures: _ } if *x == tile_x && *y == tile_y => {
+                    canvas_state.context.set_stroke_style(&highlighted);
+                }
+                _ => canvas_state.context.set_stroke_style(&black),
             }
 
             canvas_state.context.stroke_rect(

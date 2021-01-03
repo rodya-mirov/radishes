@@ -4,6 +4,7 @@ use crate::{components::*, resources::*, tile_helpers::tile_to_pixel_coords};
 
 #[system]
 #[read_component(TryLaunchWave)]
+#[read_component(ToggleAutoLaunchWave)]
 pub(super) fn process_wave_launch(
     #[resource] next_wave_state: &mut NextWaveState,
     #[resource] map: &Map,
@@ -22,6 +23,11 @@ pub(super) fn process_wave_launch(
             next_wave_state.delay_ticks = wave_delay;
         }
 
+        cmd.remove(*entity);
+    }
+
+    for (entity, _auto_toggle) in <(Entity, Read<ToggleAutoLaunchWave>)>::query().iter(world) {
+        next_wave_state.auto_launch = !next_wave_state.auto_launch;
         cmd.remove(*entity);
     }
 

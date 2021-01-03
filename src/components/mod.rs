@@ -23,6 +23,10 @@ impl Position {
         let (x, y) = crate::tile_helpers::tile_to_pixel_coords(tile_x, tile_y);
         Position { x, y }
     }
+
+    pub fn to_tile_coords(&self) -> (i32, i32) {
+        crate::tile_helpers::coords_to_tile(self.x, self.y)
+    }
 }
 
 /// Tag component, indicating a component is a tower defense mob
@@ -66,9 +70,7 @@ pub enum Renderable {
 /// Options for rendering an object using a bitmap in the Assets folder
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum RenderBitmap {
-    #[allow(unused)]
-    // turns out we're probably going to delete this variant, but it has useful (tested) example code so i'm leaving it until we have actual rendered bitmap entities
-    GasImage,
+    GasTrap,
 }
 
 /// Options for rendering an object using geometry
@@ -98,6 +100,13 @@ pub struct Hidden;
 /// Indicates the entity needs air; this has a variety of implications
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Breathes;
+
+/// Tag component indicating the entity is a structure
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct Structure(pub StructureKind);
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SellValue(pub OwnedResources);
 
 /// Indicates this is a Gas Trap, and therefore emanates poison gas every tick
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]

@@ -2,6 +2,8 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use serde::Deserialize;
 
+use legion::Entity;
+
 mod map;
 
 pub use map::*;
@@ -16,7 +18,7 @@ pub struct KeysPressed {
 
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct MenuCollapseStates {
-    collapsed: HashSet<String>,
+    collapsed: HashSet<&'static str>,
 }
 
 impl MenuCollapseStates {
@@ -24,7 +26,7 @@ impl MenuCollapseStates {
         self.collapsed.contains(key)
     }
 
-    pub fn set_collapsed(&mut self, key: String, new_state: bool) {
+    pub fn set_collapsed(&mut self, key: &'static str, new_state: bool) {
         if new_state {
             self.collapsed.insert(key.into());
         } else {
@@ -33,16 +35,41 @@ impl MenuCollapseStates {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub enum TdTileSelect {
     None,
-    Selected { x: i32, y: i32 },
+    Selected {
+        x: i32,
+        y: i32,
+        structures: Vec<SelectedStructure>,
+    },
+}
+
+impl TdTileSelect {
+    pub fn is_selected(&self) -> bool {
+        match self {
+            TdTileSelect::None => false,
+            TdTileSelect::Selected { .. } => true,
+        }
+    }
+}
+
+#[derive(Clone, Eq, PartialEq, Debug)]
+pub struct SelectedStructure {
+    pub entity: Entity,
+    pub kind: StructureKind,
+    pub sell_value: Option<OwnedResources>,
 }
 
 impl Default for TdTileSelect {
     fn default() -> Self {
         TdTileSelect::None
     }
+}
+
+#[derive(Deserialize, Copy, Clone, Eq, PartialEq, Debug, Hash, Ord, PartialOrd)]
+pub enum StructureKind {
+    GasTrap,
 }
 
 #[derive(Deserialize, Copy, Clone, Eq, PartialEq, Debug, Hash, Ord, PartialOrd)]
@@ -69,6 +96,8 @@ pub struct OwnedResources(pub BTreeMap<OwnedResource, i64>);
 
 #[derive(Deserialize, Copy, Clone, Eq, PartialEq, Debug)]
 pub struct NextWaveState {
+    /// If true, will launch the wave as soon as it's available
+    pub auto_launch: bool,
     /// The next wave to be launched
     pub next_wave: usize,
     /// Remaining ticks until a new wave can be launched
@@ -78,6 +107,7 @@ pub struct NextWaveState {
 impl Default for NextWaveState {
     fn default() -> Self {
         NextWaveState {
+            auto_launch: false,
             next_wave: 1,
             delay_ticks: 0,
         }
@@ -121,6 +151,12 @@ impl OwnedResources {
     pub fn receive(&mut self, kind: OwnedResource, amount: i64) {
         *self.0.entry(kind).or_insert(0) += amount;
     }
+
+    pub fn receive_all(&mut self, all: &OwnedResources) {
+        for (kind, amount) in all.0.iter() {
+            *self.0.entry(*kind).or_insert(0) += *amount;
+        }
+    }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -141,6 +177,35 @@ pub struct TdCamera {
     pub top: i32,
     /// Leftmost pixel on camera
     pub left: i32,
+}
+
+#[derive(Deserialize, Clone, Eq, PartialEq)]
+pub struct StructureBuildDesc {
+    pub tile: Tile,
+    pub kind: StructureKind,
+    pub cost: OwnedResources,
+}
+
+#[derive(Clone, Default, Deserialize, Eq, PartialEq, Debug)]
+pub struct StructureBuilds {
+    map: HashMap<Tile, HashMap<StructureKind, OwnedResources>>,
+}
+
+impl StructureBuilds {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    pub fn add(&mut self, build_desc: StructureBuildDesc) {
+        self.map
+            .entry(build_desc.tile)
+            .or_default()
+            .insert(build_desc.kind, build_desc.cost);
+    }
+
+    pub fn list_all_for(&self, source: Tile) -> HashMap<StructureKind, OwnedResources> {
+        self.map.get(&source).cloned().unwrap_or_else(|| Default::default())
+    }
 }
 
 #[derive(Deserialize, Clone, Eq, PartialEq)]

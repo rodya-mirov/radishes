@@ -68,7 +68,7 @@ pub(super) fn draw_renderables(
             Renderable::Bitmap { dx, dy, bitmap } => {
                 let (bitmap, sx, sy, sw, sh) = match bitmap {
                     // TODO: these constants should be in the Assets struct itself somehow
-                    RenderBitmap::GasImage => (&assets.gas_image, 0, 0, TILE_WIDTH_PIXELS, TILE_HEIGHT_PIXELS),
+                    RenderBitmap::GasTrap => (&assets.gas_trap, 0, 0, TILE_WIDTH_PIXELS, TILE_HEIGHT_PIXELS),
                 };
 
                 bitmap
@@ -138,7 +138,7 @@ fn intersects(a: BoundingBox, b: BoundingBox) -> bool {
 fn get_render_bounds(pos: Position, rend: Renderable) -> BoundingBox {
     match rend {
         Renderable::Bitmap { dx, dy, bitmap } => match bitmap {
-            RenderBitmap::GasImage => BoundingBox {
+            RenderBitmap::GasTrap => BoundingBox {
                 xmin: pos.x + dx,
                 ymin: pos.y + dy,
                 xmax: pos.x + dx + TILE_WIDTH_PIXELS,

@@ -5,6 +5,7 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::{Blob, CanvasRenderingContext2d, ImageBitmap, Request, RequestInit, RequestMode, Response, Window};
 
 pub struct Assets {
+    pub gas_trap: ImageBitmap,
     pub gas_image: ImageBitmap,
 }
 
@@ -47,6 +48,7 @@ pub async fn load_assets() -> Result<Assets, JsValue> {
 
     let assets = Assets {
         gas_image: load_image(&window, "/assets/images/gas-frame.png").await?,
+        gas_trap: load_image(&window, "/assets/images/gas-trap.png").await?,
     };
 
     Ok(assets)

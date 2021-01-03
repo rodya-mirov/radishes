@@ -3,11 +3,15 @@
 
 use legion::{systems::CommandBuffer, world::SubWorld, *};
 
-use crate::components::*;
+use crate::{components::*, resources::*};
 
 #[system]
 #[write_component(WaveState)]
-pub(super) fn update_wave_state(cmd: &mut CommandBuffer, world: &mut SubWorld) {
+pub(super) fn update_wave_state(#[resource] next_wave_state: &mut NextWaveState, cmd: &mut CommandBuffer, world: &mut SubWorld) {
+    if next_wave_state.delay_ticks == 0 && next_wave_state.auto_launch {
+        cmd.push((TryLaunchWave,));
+    }
+
     let mut query = <(Entity, Write<WaveState>)>::query();
 
     for (entity, wave_state) in query.iter_mut(world) {

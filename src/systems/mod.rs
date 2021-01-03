@@ -24,7 +24,7 @@ mod render_map_system;
 // TODO: don't recreate this every time, somehow
 pub fn canvas_render_schedule(canvas_state: &CanvasState, assets: &Arc<Assets>) -> Schedule {
     Schedule::builder()
-        .add_thread_local(render_map_system::draw_map_tiles_system(canvas_state.clone(), assets.clone()))
+        .add_thread_local(render_map_system::draw_map_tiles_system(canvas_state.clone()))
         .add_thread_local(draw_renderables::draw_renderables_system(canvas_state.clone(), assets.clone()))
         .add_thread_local(render_gas_system::draw_gas_system(canvas_state.clone(), assets.clone()))
         .build()

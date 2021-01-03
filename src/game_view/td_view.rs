@@ -88,17 +88,15 @@ impl Component for TowerDefenseComponent {
                     (camera.left, camera.top)
                 });
 
-                // TODO: probably make this a component and handle it with a system
                 if let Some((tile_x, tile_y)) = coords_to_tile_buffered(x + left, y + top, 2) {
-                    self.ecs.with(|_, r| {
-                        *r.get_mut_or_default::<TdTileSelect>() = TdTileSelect::Selected { x: tile_x, y: tile_y };
+                    self.ecs.with(|w, _| {
+                        w.push((UserClickTile { tile_x, tile_y },));
                     });
                 }
             }
             TDMessage::Cancel => {
-                // TODO: probably make this a component and handle it with a system
-                self.ecs.with(|_, r| {
-                    *r.get_mut_or_default::<TdTileSelect>() = TdTileSelect::None;
+                self.ecs.with(|w, _| {
+                    w.push((UserUnselectTile,));
                 });
             }
             TDMessage::KeyDown(arrow_key) => {

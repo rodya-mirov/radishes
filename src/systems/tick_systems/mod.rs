@@ -3,9 +3,12 @@ use legion::{systems::Builder, *};
 use super::ScheduleBuilderExt;
 
 // user input systems
+mod build_structure_system;
 mod change_tile_system;
 mod keyboard_system;
 mod launch_wave_system;
+mod sell_structure_system;
+mod user_click_system;
 
 // "every tick" systems
 mod breathe_gas_system; // breathers should take damage if they're near / on gas
@@ -23,7 +26,10 @@ mod wave_update_system; // tick the wave counter and spawn enemies if appropriat
 
 fn add_input_systems(builder: &mut Builder) -> &mut Builder {
     builder
+        .add_system_and_flush(user_click_system::process_tile_clicks_system())
         .add_system_and_flush(change_tile_system::process_tile_changes_system())
+        .add_system_and_flush(sell_structure_system::sell_structures_system())
+        .add_system_and_flush(build_structure_system::build_structures_system())
         .add_system_and_flush(launch_wave_system::process_wave_launch_system())
         .add_system_and_flush(keyboard_system::process_key_input_system())
 }

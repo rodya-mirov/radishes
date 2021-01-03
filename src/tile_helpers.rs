@@ -31,14 +31,12 @@ pub fn tile_to_pixel_coords(tile_x: i32, tile_y: i32) -> (i32, i32) {
     )
 }
 
-// TODO: doc
 fn safe_div(amt: i32, div: i32, tol: i32) -> Option<i32> {
     if tol < 0 {
         return safe_div(amt, div, -tol);
     }
 
     if div <= 0 {
-        // TODO: logging about bad inputs
         return None;
     }
 
