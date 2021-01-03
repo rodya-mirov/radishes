@@ -8,14 +8,12 @@
 
 - Tiles using images instead of boxes would be nice
 
-- Core and Spawn should be structures; this would induce a significant refactor of how map works but it's fine
-
 - Selling traps should only give you back a fraction of what you spent, so that you can't spam
 - selling traps should have a cost set in a non-fixed / non-janky way (probably a multiple of the buy price)
 - Building / selling traps and modifying tiles should take time (???)
-- Shouldn't be able to build multiple traps on one space (???)
 - UI for buy/sell needs work, the information is there but it looks like hot garbage
 
+- Core and Spawn should be structures; this would induce a significant refactor of how map works but it's fine
 - Refactor: consider not doing any tile mods at all; everything is "open", some things are "permanent blockers"
     and we don't have an infinite map. A system between modifications and monster actions can build the map
     cache from entities.

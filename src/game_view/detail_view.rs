@@ -135,13 +135,21 @@ impl DetailView {
         }
     }
 
-    fn make_change_button(&self, resources: &Resources, x: i32, y: i32, tile: Tile, costs: OwnedResources) -> Html {
+    fn make_change_button(
+        &self,
+        resources: &Resources,
+        x: i32,
+        y: i32,
+        tile: Tile,
+        costs: OwnedResources,
+        structures_present: bool,
+    ) -> Html {
         let cost_display = self.make_cost_display(&costs);
 
         let can_pay = resources.get::<OwnedResources>().unwrap().can_pay(&costs);
         let can_path = resources.get::<Map>().unwrap().can_set_tile(x, y, tile);
 
-        let would_work = can_pay && can_path;
+        let would_work = can_pay && can_path && !structures_present;
 
         let click_cb = if would_work {
             self.link.callback(move |_: MouseEvent| DetailViewMsg::ChangeTileButtonClicked {
@@ -166,21 +174,28 @@ impl DetailView {
         );
 
         let pay_err = if can_pay {
-            html! { <></> }
+            html! {}
         } else {
             html! { <p> { "You cannot afford this." } </p> }
         };
 
         let path_err: Html = if can_path {
-            html! { <></> }
+            html! {}
         } else {
             html! { <p> { "This would block the exit." } </p> }
+        };
+
+        let structures_err: Html = if structures_present {
+            html! { <p> { "Existing structure(s) must be removed first." } </p> }
+        } else {
+            html! {}
         };
 
         html! {
             <div onclick=click_cb class=style_class>
                 <p> { &button_text } </p>
                 { cost_display }
+                { structures_err }
                 { pay_err }
                 { path_err }
             </div>
@@ -270,7 +285,7 @@ impl DetailView {
                 sell_structures.push(self.make_structure_view(ss));
             }
             for (target, cost) in r.get::<TileTransforms>().unwrap().list_all_for(tile).into_iter() {
-                changes.push(self.make_change_button(r, x, y, target, cost));
+                changes.push(self.make_change_button(r, x, y, target, cost, !structures.is_empty()));
             }
             for (kind, cost) in r.get::<StructureBuilds>().unwrap().list_all_for(tile).into_iter() {
                 build_structures.push(self.make_build_button(r, x, y, kind, cost, !structures.is_empty()));
